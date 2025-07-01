@@ -36,6 +36,14 @@ const TwoPlayerGame: React.FC = () => {
   const playDrop = useAudioStore((s) => s.playDrop);
   const playVanish = useAudioStore((s) => s.playVanish);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const gameEndAudioRef = useRef<HTMLAudioElement | null>(null);
+  // Play game end sound when winner is determined
+  useEffect(() => {
+    if (state.winner && gameEndAudioRef.current && !muted) {
+      gameEndAudioRef.current.currentTime = 0;
+      gameEndAudioRef.current.play().catch(() => {});
+    }
+  }, [state.winner, muted]);
   // Background music logic (exactly as SinglePlayerGame)
   useEffect(() => {
     const audio = audioRef.current;
@@ -126,6 +134,13 @@ const TwoPlayerGame: React.FC = () => {
       />
 
       {/* Mute button at top right */}
+      {/* Game end sound effect */}
+      <audio
+        ref={gameEndAudioRef}
+        src="/game-end.mp3"
+        style={{ display: 'none' }}
+        aria-label="Game end sound"
+      />
       <button
         onClick={handleMuteToggle}
         aria-label={muted ? "Unmute background music" : "Mute background music"}

@@ -30,6 +30,7 @@ const SinglePlayerGame: React.FC = () => {
   const playDrop = useAudioStore((s) => s.playDrop);
   const playVanish = useAudioStore((s) => s.playVanish);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const gameOverAudioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
 
   // Vibrate effect state
@@ -69,6 +70,11 @@ const SinglePlayerGame: React.FC = () => {
     if (state.over) {
       setLastScore(state.score);
       setShowOverlay(true);
+      // Play game over sound
+      if (gameOverAudioRef.current && !muted) {
+        gameOverAudioRef.current.currentTime = 0;
+        gameOverAudioRef.current.play().catch(() => {});
+      }
       return;
     }
     setShowOverlay(false);
@@ -82,7 +88,7 @@ const SinglePlayerGame: React.FC = () => {
       dispatch({ type: 'tick' });
     }, Math.max(1000 - (state.level - 1) * 75, 100));
     return () => clearInterval(interval);
-  }, [state.over, state.level]);
+  }, [state.over, state.level, muted]);
 
   // Keyboard controls with long-press support
   React.useEffect(() => {
@@ -297,6 +303,13 @@ const SinglePlayerGame: React.FC = () => {
         autoPlay
         style={{ display: 'none' }}
         aria-label="Single player mode background music"
+      />
+      {/* Game over sound effect */}
+      <audio
+        ref={gameOverAudioRef}
+        src="/game-over.mp3"
+        style={{ display: 'none' }}
+        aria-label="Game over sound"
       />
       {/* Mute button at top right */}
       <button
