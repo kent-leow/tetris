@@ -40,23 +40,27 @@ const TwoPlayerGame: React.FC = () => {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    // Always set volume before play
+    audio.volume = BG_MUSIC_VOLUME / 2;
     audio.muted = muted;
-    audio.volume = BG_MUSIC_VOLUME;
-    setTimeout(() => {
-      if (!audio.muted) {
-        audio.play().catch(() => {});
-      }
-    }, 0);
-    if (muted) {
+    if (!audio.muted) {
+      audio.currentTime = 0; // Restart music on mount
+      audio.play().catch(() => {});
+    } else {
       audio.pause();
     }
   }, [muted]);
 
-  // Pause music on unmount
+  // Pause and remove music on unmount or route change
   useEffect(() => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        // Remove audio element from DOM to prevent ghost playback
+        if (audioRef.current.parentNode) {
+          audioRef.current.parentNode.removeChild(audioRef.current);
+        }
       }
     };
   }, []);
@@ -101,7 +105,13 @@ const TwoPlayerGame: React.FC = () => {
   const handleRestart = () => dispatch({ type: 'restart' });
 
   // Back to main menu handler
-  const handleBackToMenu = () => router.push('/');
+  const handleBackToMenu = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    router.push('/');
+  };
 
   return (
     <div className="relative flex flex-col items-center w-screen h-screen bg-gray-950 overflow-hidden">

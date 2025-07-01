@@ -17,7 +17,10 @@ import { submitLeaderboardEntry } from '@/lib/highscore/submitLeaderboardEntry';
 const BOARD_ROWS = 20;
 const BOARD_COLS = 10;
 
-const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) => {
+
+import { useRouter } from 'next/navigation';
+
+const SinglePlayerGame: React.FC = () => {
   const [state, dispatch] = React.useReducer(gameReducer, undefined, initGameState);
   const [submitting, setSubmitting] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
@@ -27,6 +30,7 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
   const playDrop = useAudioStore((s) => s.playDrop);
   const playVanish = useAudioStore((s) => s.playVanish);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const router = useRouter();
 
   // Vibrate effect state
   const [vibrate, setVibrate] = useState(false);
@@ -192,8 +196,17 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
     }
   };
 
+
   const handleRestart = () => {
     dispatch({ type: 'restart' });
+  };
+
+  const handleBackToMenu = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    router.push('/');
   };
 
   // Vibrate and play sound when block lands (tick or drop), and play vanish when lines are cleared
@@ -302,6 +315,15 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
           </svg>
         )}
       </button>
+      {/* Back to Main Menu button, always visible */}
+      <button
+        className="absolute top-4 left-4 z-40 px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 text-base font-semibold"
+        onClick={handleBackToMenu}
+        tabIndex={0}
+        aria-label="Back to Main Menu"
+      >
+        ← Main Menu
+      </button>
       <div className="flex flex-row gap-8 items-start mt-8">
         {renderBoard()}
         <div className="flex flex-col gap-4 ml-4">
@@ -316,20 +338,13 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
           >
             Restart (R)
           </button>
-          <button
-            className="mt-2 px-4 py-2 bg-gray-600 text-white rounded"
-            onClick={onMainMenu}
-            aria-label="Back to main menu"
-          >
-            Main Menu
-          </button>
         </div>
       </div>
       {showOverlay && (
         <GameOverOverlay
           score={lastScore}
           onSubmit={handleSubmitScore}
-          onMainMenu={onMainMenu}
+          onMainMenu={handleBackToMenu}
         />
       )}
       {submitting && (
