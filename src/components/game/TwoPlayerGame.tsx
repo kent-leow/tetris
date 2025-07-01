@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useReducer, useCallback, useState, useEffect } from 'react';
+import React, { useReducer, useCallback, useState, useEffect, useRef } from 'react';
 import {
   twoPlayerGameReducer,
   initTwoPlayerGameState,
@@ -29,7 +29,33 @@ import { useRouter } from 'next/navigation';
 
 const TwoPlayerGame: React.FC = () => {
   const [state, dispatch] = useReducer(twoPlayerGameReducer, undefined, initTwoPlayerGameState);
+  const [muted, setMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
+
+  // Music: toggle mute and play on mount
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.muted = muted;
+    if (!muted) {
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+    }
+  }, [muted]);
+
+  // Pause music on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
+  const handleMuteToggle = useCallback(() => {
+    setMuted((m) => !m);
+  }, []);
 
   // Keyboard controls for both players
   const handleKeyDown = useCallback(
@@ -68,6 +94,32 @@ const TwoPlayerGame: React.FC = () => {
 
   return (
     <div className="relative flex flex-col items-center w-screen h-screen bg-gray-950 overflow-hidden">
+      {/* Background music audio element */}
+      <audio
+        ref={audioRef}
+        src="/two-player-music.mp3"
+        loop
+        autoPlay
+        style={{ display: 'none' }}
+        aria-label="Two player mode background music"
+      />
+      {/* Mute button at top right */}
+      <button
+        onClick={handleMuteToggle}
+        aria-label={muted ? "Unmute background music" : "Mute background music"}
+        className="fixed top-4 right-4 z-50 bg-blue-800 bg-opacity-80 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 transition"
+        tabIndex={0}
+      >
+        {muted ? (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l6 6m0-6l-6 6M9 5v14l-5-5H2V9h2l5-5zm7.5 7.5a5.5 5.5 0 00-7.78-7.78" />
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5v14l-5-5H2V9h2l5-5zm7.5 7.5a5.5 5.5 0 00-7.78-7.78" />
+          </svg>
+        )}
+      </button>
       {/* Back to Main Menu button, always visible */}
       <button
         className="absolute top-4 left-4 z-40 px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 text-base font-semibold"

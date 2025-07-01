@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GameOverOverlay } from './GameOverOverlay';
 import { gameReducer, initGameState, GameState, GameAction } from '@/lib/game/engine';
 import { submitLeaderboardEntry } from '@/lib/highscore/submitLeaderboardEntry';
@@ -20,9 +20,34 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
   const [submitting, setSubmitting] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [lastScore, setLastScore] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Vibrate effect state
   const [vibrate, setVibrate] = useState(false);
+  // Music: toggle mute and play on mount
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.muted = muted;
+    if (!muted) {
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+    }
+  }, [muted]);
+
+  // Pause music on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
+  const handleMuteToggle = useCallback(() => {
+    setMuted((m) => !m);
+  }, []);
 
   // Game loop
   React.useEffect(() => {
@@ -233,6 +258,32 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center">
+      {/* Background music audio element */}
+      <audio
+        ref={audioRef}
+        src="/one-player-music.mp3"
+        loop
+        autoPlay
+        style={{ display: 'none' }}
+        aria-label="Single player mode background music"
+      />
+      {/* Mute button at top right */}
+      <button
+        onClick={handleMuteToggle}
+        aria-label={muted ? "Unmute background music" : "Mute background music"}
+        className="fixed top-4 right-4 z-50 bg-blue-800 bg-opacity-80 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 transition"
+        tabIndex={0}
+      >
+        {muted ? (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l6 6m0-6l-6 6M9 5v14l-5-5H2V9h2l5-5zm7.5 7.5a5.5 5.5 0 00-7.78-7.78" />
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5v14l-5-5H2V9h2l5-5zm7.5 7.5a5.5 5.5 0 00-7.78-7.78" />
+          </svg>
+        )}
+      </button>
       <div className="flex flex-row gap-8 items-start mt-8">
         {renderBoard()}
         <div className="flex flex-col gap-4 ml-4">
