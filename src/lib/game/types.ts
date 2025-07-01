@@ -1,4 +1,23 @@
 /**
+ * Adds garbage lines to the bottom of the board, shifting existing rows up.
+ * @param board The current board
+ * @param lines Number of garbage lines to add
+ * @returns New board with garbage lines
+ */
+export function addGarbageLines(board: Board, lines: number): Board {
+  if (lines <= 0) return board;
+  const width = 10;
+  const garbageRow = () => {
+    const emptyIdx = Math.floor(Math.random() * width);
+    return Array.from({ length: width }, (_, i) => (i === emptyIdx ? null : 'G'));
+  };
+  let newBoard = board.slice(lines);
+  for (let i = 0; i < lines; i++) {
+    newBoard.push(garbageRow());
+  }
+  return newBoard;
+}
+/**
  * Tetris Types and Utilities
  * Defines Tetromino shapes, board, and utility functions.
  */
@@ -10,8 +29,35 @@ export interface Point {
   y: number;
 }
 
-export type BoardCell = TetrominoType | null;
+export type BoardCell = TetrominoType | 'G' | null;
 export type Board = BoardCell[][]; // 20 rows x 10 cols
+
+/**
+ * Two-player game state types
+ */
+export interface PlayerState {
+  board: Board;
+  current: Tetromino;
+  next: Tetromino;
+  position: Point;
+  score: number;
+  lines: number;
+  level: number;
+  over: boolean;
+  garbageQueue: number; // Number of garbage lines to add
+}
+
+export interface TwoPlayerGameState {
+  players: [PlayerState, PlayerState];
+  winner: 1 | 2 | null;
+  started: boolean;
+}
+
+export type GarbageEvent = {
+  from: 1 | 2;
+  to: 1 | 2;
+  lines: number;
+};
 
 export interface Tetromino {
   type: TetrominoType;

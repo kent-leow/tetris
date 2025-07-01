@@ -34,8 +34,9 @@ const MainMenu: React.FC = () => {
     if (!selectedMode) return;
     if (selectedMode === 'single') {
       router.push('/single');
+    } else if (selectedMode === 'two') {
+      router.push('/double');
     }
-    // else if (selectedMode === 'two') { ... }
   }, [selectedMode, router]);
 
   const handleShowLeaderboard = useCallback(() => {
@@ -51,6 +52,17 @@ const MainMenu: React.FC = () => {
 
   return (
     <>
+      {/* Winner message should be rendered at the top of the page, not inside MainMenu. If you want a global winner message, render it here as a fixed/absolute element. */}
+      {/* Example: */}
+      {/*
+      {winner && (
+        <div className="fixed top-0 left-0 w-full z-50 flex justify-center mt-4 pointer-events-none">
+          <div className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg text-2xl font-bold">
+            {winner}
+          </div>
+        </div>
+      )}
+      */}
       <nav
         aria-label="Main Menu"
         className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-900 to-blue-700 text-white px-4"
