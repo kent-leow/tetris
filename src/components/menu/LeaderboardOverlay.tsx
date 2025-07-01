@@ -62,10 +62,10 @@ const LeaderboardOverlay: React.FC<LeaderboardOverlayProps> = ({ open, onClose, 
           ) : (
             <ol className="space-y-2">
               {entries.map(entry => (
-                <li key={entry.rank} className="flex justify-between items-center px-2 py-1 rounded hover:bg-blue-50">
-                  <span className="font-mono text-lg">#{entry.rank}</span>
-                  <span className="flex-1 text-center truncate">{entry.name}</span>
-                  <span className="font-bold text-blue-700">{entry.score.toLocaleString()}</span>
+                <li key={entry.rank} className="flex items-center px-2 py-1 rounded hover:bg-blue-50">
+                  <span className="font-mono text-lg text-blue-700 w-12 text-left">#{entry.rank}</span>
+                  <span className="flex-1 text-center truncate text-blue-700 font-semibold mx-2">{entry.name}</span>
+                  <span className="font-bold text-blue-700 w-20 text-right">{entry.score.toLocaleString()}</span>
                 </li>
               ))}
             </ol>

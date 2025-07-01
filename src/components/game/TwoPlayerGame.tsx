@@ -146,6 +146,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
     <div className="flex flex-col items-center gap-1 px-2">
       <div className="text-lg font-semibold text-black mb-1">Player {player}</div>
       <div className="text-black">Score: {state.score}</div>
+      <div className="text-black">Level: {state.level}</div>
       <div className="text-black">Opponent: {opponentScore}</div>
       <div className="mt-2"><NextTetrominoPreview tetromino={state.next} /></div>
     </div>

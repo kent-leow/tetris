@@ -91,15 +91,25 @@ export function twoPlayerGameReducer(state: TwoPlayerGameState, action: TwoPlaye
       const dropPos = getDropPosition(player.board, player.current, player.position);
       const placed = placeTetromino(player.board, player.current, dropPos);
       const { board: cleared, linesCleared } = clearLines(placed);
-      const score = player.score + getScore(linesCleared, player.level);
+      const prevLines = player.lines;
       const lines = player.lines + linesCleared;
+      const score = player.score + getScore(linesCleared, player.level);
       const level = 1 + Math.floor(lines / 10);
       const next = player.next;
       const current = getRandomTetromino();
       const position = { x: 3, y: 0 };
       const over = checkCollision(cleared, next, position);
-      // Garbage: if cleared >= 2, send to opponent
       let newPlayers = [...players] as [PlayerState, PlayerState];
+      // Opponent level up every 5 lines cleared by this player
+      const opponent = p === 0 ? 1 : 0;
+      let opponentLevel = newPlayers[opponent].level;
+      if (linesCleared > 0) {
+        const prevMilestone = Math.floor(prevLines / 5);
+        const newMilestone = Math.floor(lines / 5);
+        if (newMilestone > prevMilestone) {
+          opponentLevel += newMilestone - prevMilestone;
+        }
+      }
       newPlayers[p] = {
         ...player,
         board: cleared,
@@ -112,8 +122,11 @@ export function twoPlayerGameReducer(state: TwoPlayerGameState, action: TwoPlaye
         over,
         garbageQueue: 0,
       };
+      newPlayers[opponent] = {
+        ...newPlayers[opponent],
+        level: opponentLevel,
+      };
       if (linesCleared >= 2) {
-        const opponent = p === 0 ? 1 : 0;
         newPlayers[opponent] = {
           ...newPlayers[opponent],
           garbageQueue: newPlayers[opponent].garbageQueue + (linesCleared - 1),
