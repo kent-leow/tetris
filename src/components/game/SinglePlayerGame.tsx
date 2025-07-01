@@ -21,6 +21,9 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
   const [showOverlay, setShowOverlay] = useState(false);
   const [lastScore, setLastScore] = useState(0);
 
+  // Vibrate effect state
+  const [vibrate, setVibrate] = useState(false);
+
   // Game loop
   React.useEffect(() => {
     if (state.over) {
@@ -30,6 +33,12 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
     }
     setShowOverlay(false);
     const interval = setInterval(() => {
+      // Custom tick: detect if block lands
+      const prevY = state.position.y;
+      const nextPos = { x: state.position.x, y: state.position.y + 1 };
+      // If moving down would collide, vibrate
+      // (simulate what gameReducer does for 'tick')
+      // We can't call checkCollision here, so vibrate after reducer if position doesn't change
       dispatch({ type: 'tick' });
     }, Math.max(1000 - (state.level - 1) * 75, 100));
     return () => clearInterval(interval);
@@ -151,6 +160,21 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
     dispatch({ type: 'restart' });
   };
 
+  // Vibrate when block lands (tick or drop)
+  const prevStateRef = React.useRef(state);
+  React.useEffect(() => {
+    // If y position didn't change but board changed, block landed
+    const prev = prevStateRef.current;
+    if (
+      (prev.position.y !== state.position.y && state.position.y < prev.position.y) || // restart
+      (prev.position.y === state.position.y && prev.board !== state.board && !state.over)
+    ) {
+      setVibrate(true);
+      setTimeout(() => setVibrate(false), 180);
+    }
+    prevStateRef.current = state;
+  }, [state.board, state.position.y, state.over]);
+
   // Board rendering
   const renderBoard = () => {
     // Merge current tetromino into board for display
@@ -168,7 +192,7 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
       }
     }
     return (
-      <div className="grid grid-rows-20 grid-cols-10 gap-[1px] bg-gray-700 rounded overflow-hidden border-2 border-blue-400"
+      <div className={`grid grid-rows-20 grid-cols-10 gap-[1px] bg-gray-700 rounded overflow-hidden border-2 border-blue-400${vibrate ? ' vibrate' : ''}`}
         style={{ width: 320, height: 640 }}
         aria-label="Tetris board"
         role="grid"

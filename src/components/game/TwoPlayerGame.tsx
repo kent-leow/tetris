@@ -137,6 +137,20 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
       }
     }
   }
+  // Vibrate effect for this board
+  const [vibrate, setVibrate] = useState(false);
+  const prevStateRef = React.useRef(state);
+  useEffect(() => {
+    const prev = prevStateRef.current;
+    if (
+      (prev.position.y !== state.position.y && state.position.y < prev.position.y) || // restart
+      (prev.position.y === state.position.y && prev.board !== state.board && !state.over)
+    ) {
+      setVibrate(true);
+      setTimeout(() => setVibrate(false), 180);
+    }
+    prevStateRef.current = state;
+  }, [state.board, state.position.y, state.over]);
   // If game is over and this player lost, tilt and gray out
   const isLoser = state.over && !isWinner;
   const tiltClass = isLoser ? 'rotate-6' : '';
@@ -155,7 +169,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
     <div className={`flex flex-row items-center transition-all duration-300 rounded-xl p-2 bg-white border border-gray-300 shadow ${tiltClass} ${grayClass}`}>
       {player === 1 && infoBlock}
       <div className="bg-white rounded-xl p-1 mx-2 border border-gray-200">
-        <BoardGrid board={display} />
+        <BoardGrid board={display} vibrate={vibrate} />
       </div>
       {player === 2 && infoBlock}
     </div>
@@ -165,7 +179,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
 
 
 
-const BoardGrid: React.FC<{ board: (string | null)[][] }> = ({ board }) => {
+const BoardGrid: React.FC<{ board: (string | null)[][]; vibrate?: boolean }> = ({ board, vibrate }) => {
   // Responsive sizing: fit 90% of viewport height, max 40vw per board
   const [cellSize, setCellSize] = useState(32);
 
@@ -190,7 +204,7 @@ const BoardGrid: React.FC<{ board: (string | null)[][] }> = ({ board }) => {
   const height = cellSize * 20;
   return (
     <div
-      className="grid grid-rows-20 grid-cols-10 gap-[1px] bg-gray-700 rounded overflow-hidden border-2 border-blue-400 flex-shrink"
+      className={`grid grid-rows-20 grid-cols-10 gap-[1px] bg-gray-700 rounded overflow-hidden border-2 border-blue-400 flex-shrink${vibrate ? ' vibrate' : ''}`}
       style={{ width, height, maxHeight: '90vh' }}
       aria-label="Tetris board"
       role="grid"
