@@ -1,7 +1,8 @@
 
 'use client';
 
-import React, { useReducer, useCallback, useState, useEffect, useRef } from 'react';
+import React, { useReducer, useCallback, useEffect, useRef, useState } from 'react';
+import { useAudioStore } from '../../lib/audio/store';
 import {
   twoPlayerGameReducer,
   initTwoPlayerGameState,
@@ -29,7 +30,8 @@ import { useRouter } from 'next/navigation';
 
 const TwoPlayerGame: React.FC = () => {
   const [state, dispatch] = useReducer(twoPlayerGameReducer, undefined, initTwoPlayerGameState);
-  const [muted, setMuted] = useState(false);
+  const muted = useAudioStore((s) => s.muted);
+  const toggleMuted = useAudioStore((s) => s.toggleMuted);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
 
@@ -54,8 +56,8 @@ const TwoPlayerGame: React.FC = () => {
   }, []);
 
   const handleMuteToggle = useCallback(() => {
-    setMuted((m) => !m);
-  }, []);
+    toggleMuted();
+  }, [toggleMuted]);
 
   // Keyboard controls for both players
   const handleKeyDown = useCallback(

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useAudioStore } from '../../lib/audio/store';
 import { GameOverOverlay } from './GameOverOverlay';
 import { gameReducer, initGameState, GameState, GameAction } from '@/lib/game/engine';
 import { submitLeaderboardEntry } from '@/lib/highscore/submitLeaderboardEntry';
@@ -20,7 +21,8 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
   const [submitting, setSubmitting] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [lastScore, setLastScore] = useState(0);
-  const [muted, setMuted] = useState(false);
+  const muted = useAudioStore((s) => s.muted);
+  const toggleMuted = useAudioStore((s) => s.toggleMuted);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Vibrate effect state
@@ -46,8 +48,8 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
   }, []);
 
   const handleMuteToggle = useCallback(() => {
-    setMuted((m) => !m);
-  }, []);
+    toggleMuted();
+  }, [toggleMuted]);
 
   // Game loop
   React.useEffect(() => {

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useAudioStore } from '../../lib/audio/store';
 import { useRouter } from 'next/navigation';
 import GameModeMenu, { GameMode } from "./GameModeMenu";
 // import { useHighscore } from '../../lib/highscore/useHighscore';
@@ -24,7 +25,8 @@ const MainMenu: React.FC = () => {
   const [selectedMode, setSelectedMode] = useState<GameMode | undefined>(undefined);
   const { entries, loading: leaderboardLoading, refetch: refetchLeaderboard } = useLeaderboard();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const muted = useAudioStore((s) => s.muted);
+  const toggleMuted = useAudioStore((s) => s.toggleMuted);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
 
@@ -49,8 +51,8 @@ const MainMenu: React.FC = () => {
   }, []);
 
   const handleMuteToggle = useCallback(() => {
-    setMuted((m) => !m);
-  }, []);
+    toggleMuted();
+  }, [toggleMuted]);
 
   const handleSelectMode = useCallback((mode: GameMode) => {
     setSelectedMode(mode);
