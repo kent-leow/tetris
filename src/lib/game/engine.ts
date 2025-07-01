@@ -46,9 +46,10 @@ export function initGameState(): GameState {
  */
 export function gameReducer(state: GameState, action: GameAction): GameState {
   if (state.over && action.type !== 'restart') return state;
+
   switch (action.type) {
     case 'move': {
-      const { dx, dy } = action.payload;
+      const { dx, dy } = action.payload || { dx: 0, dy: 0 };
       const newPos = { x: state.position.x + dx, y: state.position.y + dy };
       if (!checkCollision(state.board, state.current, newPos)) {
         return { ...state, position: newPos };
@@ -63,6 +64,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return state;
     }
     case 'drop': {
+      // Hard drop: move piece down until collision
       const dropPos = getDropPosition(state.board, state.current, state.position);
       const placed = placeTetromino(state.board, state.current, dropPos);
       const { board: cleared, linesCleared } = clearLines(placed);
@@ -86,11 +88,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       };
     }
     case 'tick': {
+      // Soft drop: try to move piece down by 1
       const newPos = { x: state.position.x, y: state.position.y + 1 };
       if (!checkCollision(state.board, state.current, newPos)) {
         return { ...state, position: newPos };
       }
-      // Place tetromino
+      // If collision, place piece and spawn next
       const placed = placeTetromino(state.board, state.current, state.position);
       const { board: cleared, linesCleared } = clearLines(placed);
       const score = state.score + getScore(linesCleared, state.level);
