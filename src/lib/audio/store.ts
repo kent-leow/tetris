@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { BG_MUSIC_VOLUME, SFX_VOLUME } from './constants';
 
 
 interface AudioStore {
@@ -31,13 +32,13 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
   playDrop: () => {
     if (typeof window === 'undefined' || get().muted) return;
     const audio = new window.Audio('/drop-sound.mp3');
-    audio.volume = 1.0;
+    audio.volume = SFX_VOLUME;
     audio.play().catch(() => {});
   },
   playVanish: () => {
     if (typeof window === 'undefined' || get().muted) return;
     const audio = new window.Audio('/vanish-sound.mp3');
-    audio.volume = 1.0;
+    audio.volume = SFX_VOLUME;
     audio.play().catch(() => {});
   },
 }));

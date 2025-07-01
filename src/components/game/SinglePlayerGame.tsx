@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAudioStore } from '../../lib/audio/store';
+import { BG_MUSIC_VOLUME } from '../../lib/audio/constants';
 import { GameOverOverlay } from './GameOverOverlay';
 import { gameReducer, initGameState, GameState, GameAction } from '@/lib/game/engine';
 import { submitLeaderboardEntry } from '@/lib/highscore/submitLeaderboardEntry';
@@ -34,7 +35,7 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = muted;
-    audio.volume = 0.25;
+    audio.volume = BG_MUSIC_VOLUME;
     if (!muted) {
       audio.play().catch(() => {});
     }

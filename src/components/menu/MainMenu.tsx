@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useAudioStore } from '../../lib/audio/store';
+import { BG_MUSIC_VOLUME } from '../../lib/audio/constants';
 import { useRouter } from 'next/navigation';
 import GameModeMenu, { GameMode } from "./GameModeMenu";
 // import { useHighscore } from '../../lib/highscore/useHighscore';
@@ -35,7 +36,7 @@ const MainMenu: React.FC = () => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = muted;
-    audio.volume = 0.25;
+    audio.volume = BG_MUSIC_VOLUME;
     if (!muted) {
       audio.play().catch(() => {});
     }
