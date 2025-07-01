@@ -33,12 +33,27 @@ const MainMenu: React.FC = () => {
 
   // Toggle audio.muted property for seamless mute/unmute
   useEffect(() => {
+    // Pause any other music (e.g., two-player or single-player)
+    const otherAudios = Array.from(document.querySelectorAll('audio')) as HTMLAudioElement[];
+    otherAudios.forEach(a => {
+      if (a !== audioRef.current && a.src && !a.src.endsWith('/main-menu-music.mp3')) {
+        a.pause();
+        a.currentTime = 0;
+      }
+    });
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = muted;
     audio.volume = BG_MUSIC_VOLUME;
-    if (!muted) {
-      audio.play().catch(() => {});
+    // Always play music on mount if not muted (including reload)
+    if (muted) {
+      audio.pause();
+    } else {
+      setTimeout(() => {
+        if (!audio.muted) {
+          audio.play().catch(() => {});
+        }
+      }, 0);
     }
   }, [muted]);
 

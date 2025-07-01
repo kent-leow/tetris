@@ -35,9 +35,15 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = muted;
-    audio.volume = BG_MUSIC_VOLUME;
-    if (!muted) {
-      audio.play().catch(() => {});
+    audio.volume = BG_MUSIC_VOLUME / 2;
+    // Always try to play on mount (default)
+    setTimeout(() => {
+      if (!audio.muted) {
+        audio.play().catch(() => {});
+      }
+    }, 0);
+    if (muted) {
+      audio.pause();
     }
   }, [muted]);
 

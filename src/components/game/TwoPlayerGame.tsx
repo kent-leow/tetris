@@ -36,16 +36,19 @@ const TwoPlayerGame: React.FC = () => {
   const playDrop = useAudioStore((s) => s.playDrop);
   const playVanish = useAudioStore((s) => s.playVanish);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const router = useRouter();
-
-  // Music: toggle mute and play on mount
+  // Background music logic (exactly as SinglePlayerGame)
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = muted;
     audio.volume = BG_MUSIC_VOLUME;
-    if (!muted) {
-      audio.play().catch(() => {});
+    setTimeout(() => {
+      if (!audio.muted) {
+        audio.play().catch(() => {});
+      }
+    }, 0);
+    if (muted) {
+      audio.pause();
     }
   }, [muted]);
 
@@ -57,6 +60,9 @@ const TwoPlayerGame: React.FC = () => {
       }
     };
   }, []);
+  const router = useRouter();
+
+
 
   const handleMuteToggle = useCallback(() => {
     toggleMuted();
@@ -106,8 +112,9 @@ const TwoPlayerGame: React.FC = () => {
         loop
         autoPlay
         style={{ display: 'none' }}
-        aria-label="Two player mode background music"
+        aria-label="Two player background music"
       />
+
       {/* Mute button at top right */}
       <button
         onClick={handleMuteToggle}
