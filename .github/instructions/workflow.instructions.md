@@ -75,7 +75,7 @@ applyTo: '**'
 ## Development Environment
 ### Local Setup
 - Use consistent Node.js version
-- Use pnpm for package management
+- Use npm for package management
 - Implement git hooks with Husky
 - Use commitlint for commits
 - Configure ESLint and Prettier

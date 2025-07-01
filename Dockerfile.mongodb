@@ -1,0 +1,8 @@
+# Dockerfile for local MongoDB
+# Usage: docker compose up -d
+FROM mongo:7.0
+
+# Expose default MongoDB port
+EXPOSE 27017
+
+# No custom config needed for local dev

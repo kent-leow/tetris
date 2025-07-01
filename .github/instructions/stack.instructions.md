@@ -98,7 +98,7 @@ applyTo: '**'
   - Global packages
 
 ### Package Management
-- pnpm
+- npm
   - Workspace support
   - Lock file handling
   - Script running

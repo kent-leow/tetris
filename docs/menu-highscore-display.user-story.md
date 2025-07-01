@@ -3,7 +3,7 @@
 **As a player, I want to see my current highscore displayed on the main menu, so I can track my progress and achievements.**
 
 ## Acceptance Criteria
-- The highscore is fetched from local storage and displayed prominently.
+- The highscore is fetched from backend and DB.
 - If no highscore exists, show a default message (e.g., “No highscore yet”).
 - The highscore updates after each game session.
 
