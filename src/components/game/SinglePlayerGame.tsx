@@ -23,6 +23,8 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
   const [lastScore, setLastScore] = useState(0);
   const muted = useAudioStore((s) => s.muted);
   const toggleMuted = useAudioStore((s) => s.toggleMuted);
+  const playDrop = useAudioStore((s) => s.playDrop);
+  const playVanish = useAudioStore((s) => s.playVanish);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Vibrate effect state
@@ -32,8 +34,8 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = muted;
+    audio.volume = 0.25;
     if (!muted) {
-      audio.volume = 0.5;
       audio.play().catch(() => {});
     }
   }, [muted]);
@@ -187,20 +189,27 @@ const SinglePlayerGame: React.FC<{ onMainMenu: () => void }> = ({ onMainMenu }) 
     dispatch({ type: 'restart' });
   };
 
-  // Vibrate when block lands (tick or drop)
+  // Vibrate and play sound when block lands (tick or drop), and play vanish when lines are cleared
   const prevStateRef = React.useRef(state);
   React.useEffect(() => {
     // If y position didn't change but board changed, block landed
     const prev = prevStateRef.current;
+    // Detect lines cleared
+    const prevLines = prev.lines;
+    const linesCleared = state.lines - prevLines;
     if (
       (prev.position.y !== state.position.y && state.position.y < prev.position.y) || // restart
       (prev.position.y === state.position.y && prev.board !== state.board && !state.over)
     ) {
       setVibrate(true);
       setTimeout(() => setVibrate(false), 180);
+      playDrop();
+    }
+    if (linesCleared > 0) {
+      playVanish();
     }
     prevStateRef.current = state;
-  }, [state.board, state.position.y, state.over]);
+  }, [state.board, state.position.y, state.over, state.lines, playDrop, playVanish]);
 
   // Board rendering
   const renderBoard = () => {

@@ -35,8 +35,8 @@ const MainMenu: React.FC = () => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = muted;
+    audio.volume = 0.25;
     if (!muted) {
-      audio.volume = 0.5;
       audio.play().catch(() => {});
     }
   }, [muted]);

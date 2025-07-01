@@ -32,6 +32,8 @@ const TwoPlayerGame: React.FC = () => {
   const [state, dispatch] = useReducer(twoPlayerGameReducer, undefined, initTwoPlayerGameState);
   const muted = useAudioStore((s) => s.muted);
   const toggleMuted = useAudioStore((s) => s.toggleMuted);
+  const playDrop = useAudioStore((s) => s.playDrop);
+  const playVanish = useAudioStore((s) => s.playVanish);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
 
@@ -40,8 +42,8 @@ const TwoPlayerGame: React.FC = () => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = muted;
+    audio.volume = 0.25;
     if (!muted) {
-      audio.volume = 0.5;
       audio.play().catch(() => {});
     }
   }, [muted]);
@@ -177,6 +179,8 @@ interface PlayerBoardProps {
 }
 
 const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore, isWinner }) => {
+  const playDrop = useAudioStore((s) => s.playDrop);
+  const playVanish = useAudioStore((s) => s.playVanish);
   // Merge current tetromino into board for display
   const display: (string | null)[][] = state.board.map((row: (string | null)[]) => [...row]);
   const { current, position } = state;
@@ -196,15 +200,22 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
   const prevStateRef = React.useRef(state);
   useEffect(() => {
     const prev = prevStateRef.current;
+    // Detect lines cleared
+    const prevLines = prev.lines;
+    const linesCleared = state.lines - prevLines;
     if (
       (prev.position.y !== state.position.y && state.position.y < prev.position.y) || // restart
       (prev.position.y === state.position.y && prev.board !== state.board && !state.over)
     ) {
       setVibrate(true);
       setTimeout(() => setVibrate(false), 180);
+      playDrop();
+    }
+    if (linesCleared > 0) {
+      playVanish();
     }
     prevStateRef.current = state;
-  }, [state.board, state.position.y, state.over]);
+  }, [state.board, state.position.y, state.over, state.lines, playDrop, playVanish]);
   // If game is over and this player lost, tilt and gray out
   const isLoser = state.over && !isWinner;
   const tiltClass = isLoser ? 'rotate-6' : '';
