@@ -25,6 +25,7 @@ const SinglePlayerGame: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [lastScore, setLastScore] = useState(0);
+  const [gameStarted, setGameStarted] = useState(false);
   const muted = useAudioStore((s) => s.muted);
   const toggleMuted = useAudioStore((s) => s.toggleMuted);
   const playDrop = useAudioStore((s) => s.playDrop);
@@ -35,22 +36,19 @@ const SinglePlayerGame: React.FC = () => {
 
   // Vibrate effect state
   const [vibrate, setVibrate] = useState(false);
-  // Music: toggle mute and play on mount
+  // Music: toggle mute and play only when game starts
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = muted;
     audio.volume = BG_MUSIC_VOLUME / 2;
-    // Always try to play on mount (default)
-    setTimeout(() => {
-      if (!audio.muted) {
-        audio.play().catch(() => {});
-      }
-    }, 0);
-    if (muted) {
+    // Only play music when game has started and not muted
+    if (gameStarted && !muted) {
+      audio.play().catch(() => {});
+    } else {
       audio.pause();
     }
-  }, [muted]);
+  }, [muted, gameStarted]);
 
   // Pause music on unmount
   useEffect(() => {
@@ -65,15 +63,17 @@ const SinglePlayerGame: React.FC = () => {
     toggleMuted();
   }, [toggleMuted]);
 
-  // Game loop
+  // Game loop - only run when game has started
   React.useEffect(() => {
-    if (state.over) {
-      setLastScore(state.score);
-      setShowOverlay(true);
-      // Play game over sound
-      if (gameOverAudioRef.current && !muted) {
-        gameOverAudioRef.current.currentTime = 0;
-        gameOverAudioRef.current.play().catch(() => {});
+    if (!gameStarted || state.over) {
+      if (state.over) {
+        setLastScore(state.score);
+        setShowOverlay(true);
+        // Play game over sound
+        if (gameOverAudioRef.current && !muted) {
+          gameOverAudioRef.current.currentTime = 0;
+          gameOverAudioRef.current.play().catch(() => {});
+        }
       }
       return;
     }
@@ -88,11 +88,11 @@ const SinglePlayerGame: React.FC = () => {
       dispatch({ type: 'tick' });
     }, Math.max(1000 - (state.level - 1) * 75, 100));
     return () => clearInterval(interval);
-  }, [state.over, state.level, muted]);
+  }, [gameStarted, state.over, state.level, muted]);
 
-  // Keyboard controls with long-press support
+  // Keyboard controls with long-press support - only when game has started
   React.useEffect(() => {
-    if (state.over) return;
+    if (!gameStarted || state.over) return;
     let leftInterval: NodeJS.Timeout | null = null;
     let rightInterval: NodeJS.Timeout | null = null;
     let downInterval: NodeJS.Timeout | null = null;
@@ -191,7 +191,7 @@ const SinglePlayerGame: React.FC = () => {
       stopMove('right');
       stopMove('down');
     };
-  }, [state.over]);
+  }, [gameStarted, state.over]);
 
   const handleSubmitScore = async (name: string) => {
     setSubmitting(true);
@@ -205,6 +205,12 @@ const SinglePlayerGame: React.FC = () => {
 
   const handleRestart = () => {
     dispatch({ type: 'restart' });
+    setGameStarted(true); // Ensure game is started after restart
+  };
+
+  const handleStartGame = () => {
+    setGameStarted(true);
+    dispatch({ type: 'restart' }); // Reset game state to ensure clean start
   };
 
   const handleBackToMenu = () => {
@@ -300,7 +306,6 @@ const SinglePlayerGame: React.FC = () => {
         ref={audioRef}
         src="/one-player-music.mp3"
         loop
-        autoPlay
         style={{ display: 'none' }}
         aria-label="Single player mode background music"
       />
@@ -337,6 +342,30 @@ const SinglePlayerGame: React.FC = () => {
       >
         ← Main Menu
       </button>
+
+      {/* Game Start Overlay - displayed when game hasn't started */}
+      {!gameStarted && (
+        <div className="fixed inset-0 bg-gray-950 bg-opacity-95 flex items-center justify-center z-30">
+          <div className="bg-white rounded-lg p-8 shadow-2xl text-center max-w-md mx-4 game-start-overlay">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Single Player Tetris</h2>
+            <p className="text-gray-600 mb-6">
+              Get ready to play! Use arrow keys to move, up arrow or X to rotate, and spacebar for hard drop.
+            </p>
+            <button
+              onClick={handleStartGame}
+              className="px-8 py-4 bg-blue-600 text-white text-xl font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 game-start-button"
+              autoFocus
+            >
+              🎮 Start Game
+            </button>
+            <div className="mt-4 text-sm text-gray-500">
+              <p><strong>Controls:</strong></p>
+              <p>← → ↓ Move • ↑ or X: Rotate • Space: Drop • R: Restart</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-row gap-8 items-start mt-8">
         {renderBoard()}
         <div className="flex flex-col gap-4 ml-4">
@@ -345,8 +374,9 @@ const SinglePlayerGame: React.FC = () => {
           <div className="text-md">Level: {state.level}</div>
           <div className="text-md">Lines: {state.lines}</div>
           <button
-            className="mt-8 px-4 py-2 bg-blue-600 text-white rounded"
+            className="mt-8 px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleRestart}
+            disabled={!gameStarted}
             aria-label="Restart game"
           >
             Restart (R)

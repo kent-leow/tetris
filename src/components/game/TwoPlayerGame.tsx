@@ -31,6 +31,7 @@ import { useRouter } from 'next/navigation';
 
 const TwoPlayerGame: React.FC = () => {
   const [state, dispatch] = useReducer(twoPlayerGameReducer, undefined, initTwoPlayerGameState);
+  const [gameStarted, setGameStarted] = useState(false);
   const muted = useAudioStore((s) => s.muted);
   const toggleMuted = useAudioStore((s) => s.toggleMuted);
   const playDrop = useAudioStore((s) => s.playDrop);
@@ -44,20 +45,20 @@ const TwoPlayerGame: React.FC = () => {
       gameEndAudioRef.current.play().catch(() => {});
     }
   }, [state.winner, muted]);
-  // Background music logic (exactly as SinglePlayerGame)
+  // Background music logic - only play when game has started
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     // Always set volume before play
     audio.volume = BG_MUSIC_VOLUME / 2;
     audio.muted = muted;
-    if (!audio.muted) {
-      audio.currentTime = 0; // Restart music on mount
+    if (gameStarted && !audio.muted) {
+      audio.currentTime = 0; // Restart music on game start
       audio.play().catch(() => {});
     } else {
       audio.pause();
     }
-  }, [muted]);
+  }, [muted, gameStarted]);
 
   // Pause and remove music on unmount or route change
   useEffect(() => {
@@ -80,9 +81,10 @@ const TwoPlayerGame: React.FC = () => {
     toggleMuted();
   }, [toggleMuted]);
 
-  // Keyboard controls for both players
+  // Keyboard controls for both players - only when game has started
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      if (!gameStarted) return;
       PLAYER_KEYS.forEach((keys, idx) => {
         if (e.key === keys.left) dispatch({ type: 'move', player: idx as 0 | 1, dx: -1, dy: 0 });
         if (e.key === keys.right) dispatch({ type: 'move', player: idx as 0 | 1, dx: 1, dy: 0 });
@@ -91,7 +93,7 @@ const TwoPlayerGame: React.FC = () => {
         if (e.key === keys.drop) dispatch({ type: 'drop', player: idx as 0 | 1 });
       });
     },
-    [dispatch]
+    [dispatch, gameStarted]
   );
 
   React.useEffect(() => {
@@ -99,18 +101,26 @@ const TwoPlayerGame: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  // Game loop (tick)
+  // Game loop (tick) - only when game has started
   React.useEffect(() => {
-    if (state.winner) return;
+    if (!gameStarted || state.winner) return;
     const interval = setInterval(() => {
       dispatch({ type: 'tick', player: 0 });
       dispatch({ type: 'tick', player: 1 });
     }, 600);
     return () => clearInterval(interval);
-  }, [state.winner]);
+  }, [gameStarted, state.winner]);
 
   // Restart handler
-  const handleRestart = () => dispatch({ type: 'restart' });
+  const handleRestart = () => {
+    dispatch({ type: 'restart' });
+    setGameStarted(true); // Ensure game is started after restart
+  };
+
+  const handleStartGame = () => {
+    setGameStarted(true);
+    dispatch({ type: 'restart' }); // Reset game state to ensure clean start
+  };
 
   // Back to main menu handler
   const handleBackToMenu = () => {
@@ -128,7 +138,6 @@ const TwoPlayerGame: React.FC = () => {
         ref={audioRef}
         src="/two-player-music.mp3"
         loop
-        autoPlay
         style={{ display: 'none' }}
         aria-label="Two player background music"
       />
@@ -166,6 +175,36 @@ const TwoPlayerGame: React.FC = () => {
       >
         ← Main Menu
       </button>
+
+      {/* Game Start Overlay - displayed when game hasn't started */}
+      {!gameStarted && (
+        <div className="fixed inset-0 bg-gray-950 bg-opacity-95 flex items-center justify-center z-30">
+          <div className="bg-white rounded-lg p-8 shadow-2xl text-center max-w-lg mx-4 game-start-overlay">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Two Player Tetris</h2>
+            <p className="text-gray-600 mb-6">
+              Get ready for competitive play! First player to top out loses.
+            </p>
+            <button
+              onClick={handleStartGame}
+              className="px-8 py-4 bg-blue-600 text-white text-xl font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 game-start-button"
+              autoFocus
+            >
+              🎮 Start Battle
+            </button>
+            <div className="mt-6 text-sm text-gray-500 grid grid-cols-2 gap-4">
+              <div>
+                <p><strong>Player 1 Controls:</strong></p>
+                <p>W A S D + Spacebar</p>
+              </div>
+              <div>
+                <p><strong>Player 2 Controls:</strong></p>
+                <p>Arrow Keys + Enter</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Winner overlay at the very top, stacked above the game space */}
       {state.winner && (
         <div className="absolute top-0 left-0 w-full flex justify-center z-30 pointer-events-none">

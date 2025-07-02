@@ -31,7 +31,7 @@ const MainMenu: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
 
-  // Toggle audio.muted property for seamless mute/unmute
+  // Toggle audio.muted property and ensure proper audio initialization
   useEffect(() => {
     // Pause any other music (e.g., two-player or single-player)
     const otherAudios = Array.from(document.querySelectorAll('audio')) as HTMLAudioElement[];
@@ -45,15 +45,26 @@ const MainMenu: React.FC = () => {
     if (!audio) return;
     audio.muted = muted;
     audio.volume = BG_MUSIC_VOLUME;
-    // Always play music on mount if not muted (including reload)
-    if (muted) {
-      audio.pause();
-    } else {
-      setTimeout(() => {
+    
+    // Start playing music if not muted
+    if (!muted) {
+      // Remove autoplay, use user interaction to start
+      const playAudio = () => {
         if (!audio.muted) {
           audio.play().catch(() => {});
         }
-      }, 0);
+        document.removeEventListener('click', playAudio);
+        document.removeEventListener('keydown', playAudio);
+      };
+      
+      // Try to play immediately, but also set up listeners for user interaction
+      audio.play().catch(() => {
+        // If autoplay fails, wait for user interaction
+        document.addEventListener('click', playAudio, { once: true });
+        document.addEventListener('keydown', playAudio, { once: true });
+      });
+    } else {
+      audio.pause();
     }
   }, [muted]);
 
@@ -111,7 +122,6 @@ const MainMenu: React.FC = () => {
         ref={audioRef}
         src="/main-menu-music.mp3"
         loop
-        autoPlay
         style={{ display: 'none' }}
         aria-label="Main menu background music"
       />
