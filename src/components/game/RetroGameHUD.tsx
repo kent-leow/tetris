@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import RetroText from '../menu/RetroText';
 import RetroButton from '../menu/RetroButton';
+import { useFocusManager } from '../../lib/accessibility/useFocusManager';
 
 /**
  * Retro-styled HUD component for game interface
@@ -36,6 +37,31 @@ const RetroGameHUD: React.FC<RetroGameHUDProps> = ({
   gameStarted = true,
   className = "",
 }) => {
+  const restartButtonRef = useRef<HTMLButtonElement>(null);
+  const { removeFocusFromElement } = useFocusManager();
+
+  // Prevent restart button from staying focused to avoid accidental spacebar restarts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === ' ') {
+        // Remove focus from restart button when spacebar is pressed during gameplay
+        // This prevents accidental restarts when trying to drop tetrominos
+        removeFocusFromElement(restartButtonRef.current);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [removeFocusFromElement]);
+
+  // Auto-unfocus the restart button after a short delay to prevent spacebar accidents
+  const handleRestartClick = () => {
+    if (onRestart) {
+      onRestart();
+      // Unfocus the button after action to prevent accidental re-activation
+      setTimeout(() => removeFocusFromElement(restartButtonRef.current), 100);
+    }
+  };
   return (
     <div className={`flex flex-col gap-4 ${className}`}>
       {/* Top row - Navigation buttons */}
@@ -151,12 +177,13 @@ const RetroGameHUD: React.FC<RetroGameHUDProps> = ({
         
         {onRestart && (
           <RetroButton
-            onClick={onRestart}
+            ref={restartButtonRef}
+            onClick={handleRestartClick}
             variant="primary"
             size="sm"
             className="w-full"
             disabled={!gameStarted}
-            aria-label="Restart game"
+            aria-label="Restart game - Press Enter to restart, avoid using spacebar during gameplay"
           >
             ↻ Restart (R)
           </RetroButton>

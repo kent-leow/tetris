@@ -51,7 +51,7 @@ const sizeClasses = {
   lg: 'py-4 px-8 text-lg',
 };
 
-const RetroButton: React.FC<RetroButtonProps> = ({
+const RetroButton = React.forwardRef<HTMLButtonElement, RetroButtonProps>(({
   children,
   onClick,
   disabled = false,
@@ -66,7 +66,7 @@ const RetroButton: React.FC<RetroButtonProps> = ({
   'aria-haspopup': ariaHaspopup,
   'aria-expanded': ariaExpanded,
   'aria-label': ariaLabel,
-}) => {
+}, ref) => {
   const variantStyle = variantClasses[variant];
   
   const baseClasses = [
@@ -98,6 +98,7 @@ const RetroButton: React.FC<RetroButtonProps> = ({
 
   return (
     <button
+      ref={ref}
       className={`${baseClasses} ${className}`}
       onClick={onClick}
       disabled={disabled}
@@ -134,6 +135,8 @@ const RetroButton: React.FC<RetroButtonProps> = ({
       </span>
     </button>
   );
-};
+});
+
+RetroButton.displayName = 'RetroButton';
 
 export default React.memo(RetroButton);

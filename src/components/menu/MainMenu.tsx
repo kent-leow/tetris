@@ -12,6 +12,7 @@ import AnimatedBackground from './AnimatedBackground';
 import RetroText from './RetroText';
 import RetroButton from './RetroButton';
 import { useNoScroll } from '../../lib/game/useNoScroll';
+import { useMenuNavigation } from '../../lib/accessibility/useFocusManager';
 
 /**
  * MainMenu component displays the main menu for the Tetris game.
@@ -35,10 +36,73 @@ const MainMenu: React.FC = () => {
   const toggleMuted = useAudioStore((s) => s.toggleMuted);
   const getMusicVolume = useAudioStore((s) => s.getMusicVolume);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const menuContainerRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
   // Prevent all scrolling on this page except for modals/overlays
   useNoScroll({ allowModalScroll: true });
+
+  // Menu navigation with arrow keys
+  const { handleKeyDown: handleMenuKeyDown } = useMenuNavigation({
+    itemSelector: '[role="menuitem"], [data-menu-item]',
+    container: menuContainerRef.current,
+    orientation: 'vertical',
+    wrap: true,
+  });
+
+  // Enhanced keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't handle keys when overlays are open
+      if (showLeaderboard || showSettings) return;
+
+      // Handle menu navigation
+      if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
+        handleMenuKeyDown(event);
+        return;
+      }
+
+      // Handle shortcuts
+      switch (event.key) {
+        case '1':
+          event.preventDefault();
+          setSelectedMode('single');
+          break;
+        case '2':
+          event.preventDefault();
+          setSelectedMode('two');
+          break;
+        case 'Enter':
+        case ' ':
+          // Handle action based on focused element
+          const activeElement = document.activeElement;
+          if (activeElement && activeElement.getAttribute('role') === 'menuitem') {
+            event.preventDefault();
+            (activeElement as HTMLElement).click();
+          }
+          break;
+        case 'l':
+        case 'L':
+          event.preventDefault();
+          handleShowLeaderboard();
+          break;
+        case 's':
+        case 'S':
+          event.preventDefault();
+          handleShowSettings();
+          break;
+        case 'Escape':
+          // Clear focus when escape is pressed
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showLeaderboard, showSettings, handleMenuKeyDown]);
 
   // Toggle audio.muted property and ensure proper audio initialization
   useEffect(() => {
@@ -206,12 +270,12 @@ const MainMenu: React.FC = () => {
         </div>
 
         {/* Game mode selection */}
-        <div className="mb-6 w-full max-w-md flex-shrink-0">
+        <div className="mb-6 w-full max-w-md flex-shrink-0" data-menu-item>
           <GameModeMenu onSelectMode={handleSelectMode} selectedMode={selectedMode} />
         </div>
 
         {/* Menu buttons */}
-        <div className="w-full max-w-md space-y-3 flex-shrink-0" role="menu">
+        <div ref={menuContainerRef} className="w-full max-w-md space-y-3 flex-shrink-0" role="menu" aria-label="Main navigation menu">
           <RetroButton
             onClick={handleStartGame}
             disabled={!selectedMode}
@@ -222,9 +286,13 @@ const MainMenu: React.FC = () => {
             tabIndex={0}
             autoFocus
             aria-disabled={!selectedMode}
+            aria-describedby="start-game-description"
           >
             {selectedMode ? `Start ${selectedMode === 'single' ? 'Single Player' : 'Two Player'} Game` : 'Start Game'}
           </RetroButton>
+          <div id="start-game-description" className="sr-only">
+            {selectedMode ? `Press Enter to start ${selectedMode} player game` : 'Select a game mode first'}
+          </div>
 
           <RetroButton
             onClick={handleShowLeaderboard}
@@ -235,9 +303,13 @@ const MainMenu: React.FC = () => {
             tabIndex={0}
             aria-haspopup="dialog"
             aria-expanded={showLeaderboard}
+            aria-describedby="leaderboard-description"
           >
             Leaderboard
           </RetroButton>
+          <div id="leaderboard-description" className="sr-only">
+            View high scores and rankings
+          </div>
 
           <RetroButton
             onClick={handleShowSettings}
@@ -248,15 +320,22 @@ const MainMenu: React.FC = () => {
             tabIndex={0}
             aria-haspopup="dialog"
             aria-expanded={showSettings}
+            aria-describedby="settings-description"
           >
             Settings
           </RetroButton>
+          <div id="settings-description" className="sr-only">
+            Adjust game settings and preferences
+          </div>
         </div>
 
-        {/* Retro decorative elements */}
-        <div className="mt-8 text-center flex-shrink-0">
+        {/* Enhanced keyboard navigation hints */}
+        <div className="mt-8 text-center flex-shrink-0 space-y-1">
           <RetroText size="sm" variant="primary" glow={false} className="opacity-60">
-            Use arrow keys to navigate • Enter to select
+            ↑↓ Navigate • Enter/Space Activate • 1/2 Select Mode
+          </RetroText>
+          <RetroText size="sm" variant="secondary" glow={false} className="opacity-40">
+            L: Leaderboard • S: Settings • Esc: Clear Focus
           </RetroText>
         </div>
       </nav>

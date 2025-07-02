@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import RetroText from '../menu/RetroText';
 import RetroButton from '../menu/RetroButton';
+import { useFocusManager } from '../../lib/accessibility/useFocusManager';
 
 /**
  * GameOverOverlay with retro styling
@@ -19,6 +20,35 @@ interface GameOverOverlayProps {
 export const GameOverOverlay: React.FC<GameOverOverlayProps> = ({ score, onSubmit, onMainMenu, onPlayAgain }) => {
   const [name, setName] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const playAgainButtonRef = useRef<HTMLButtonElement>(null);
+  const { removeFocusFromElement } = useFocusManager();
+
+  // Prevent restart button from staying focused to avoid accidental spacebar restarts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === ' ' && document.activeElement === playAgainButtonRef.current) {
+        // Only allow spacebar on Play Again button if it's intentionally focused
+        // Don't prevent default here - let the button handle it
+        return;
+      }
+      
+      // Remove focus from restart-related buttons when spacebar is pressed
+      // This prevents accidental restarts when trying to drop tetrominos
+      if (event.key === ' ') {
+        removeFocusFromElement(playAgainButtonRef.current);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [removeFocusFromElement]);
+
+  // Auto-unfocus the Play Again button after a short delay to prevent spacebar accidents
+  const handlePlayAgainClick = () => {
+    onPlayAgain();
+    // Unfocus the button after action to prevent accidental re-activation
+    setTimeout(() => removeFocusFromElement(playAgainButtonRef.current), 100);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,10 +154,12 @@ export const GameOverOverlay: React.FC<GameOverOverlayProps> = ({ score, onSubmi
         {/* Action Buttons */}
         <div className="space-y-3 mt-6">
           <RetroButton
-            onClick={onPlayAgain}
+            ref={playAgainButtonRef}
+            onClick={handlePlayAgainClick}
             variant="primary"
             size="lg"
             className="w-full"
+            aria-label="Play again - Press Enter or Space to restart"
           >
             ↻ Play Again
           </RetroButton>
