@@ -159,7 +159,7 @@ export function placeTetromino(board: Board, tetromino: Tetromino, pos: Point): 
 }
 
 export function clearLines(board: Board): { board: Board; linesCleared: number } {
-  const newBoard = board.filter(row => row.some(cell => !cell));
+  const newBoard = board.filter(row => row.some(cell => cell === null));
   const linesCleared = 20 - newBoard.length;
   while (newBoard.length < 20) {
     newBoard.unshift(Array(10).fill(null));

@@ -1,190 +1,336 @@
 /**
  * Drop Assistant Tests
  * 
- * Tests for the drop assistant feature that shows where tetrominos will land.
+ * Comprehensive tests for the drop assistant feature that shows where tetrominos will land.
  * This feature helps players visualize piece placement for more precise gameplay.
- * 
- * Note: These tests are structured for Jest/Vitest but the testing framework
- * needs to be added to the project dependencies to run these tests.
  */
 
-import { getDropPosition } from '../types';
-import { createEmptyBoard } from '../types';
+import { 
+  getDropPosition, 
+  createEmptyBoard, 
+  checkCollision, 
+  placeTetromino,
+  getRandomTetromino,
+  rotateTetromino,
+  Board,
+  Tetromino,
+  Point,
+  TetrominoType
+} from '../types';
 
-/**
- * Test cases for the drop assistant feature
- */
-export const dropAssistantTests = {
-  /**
-   * Test: Basic drop position calculation
-   */
-  'should calculate correct drop position for I-piece on empty board': () => {
-    // Test implementation would verify:
-    // - I-piece drops to bottom of empty board
-    // - Position is calculated correctly for all rotations
-    // - Handles board boundaries properly
-  },
-
-  /**
-   * Test: Drop position with obstacles
-   */
-  'should calculate drop position with existing pieces on board': () => {
-    // Test implementation would verify:
-    // - Piece stops when it hits an existing piece
-    // - Position calculation respects collision detection
-    // - Works with complex board configurations
-  },
-
-  /**
-   * Test: Drop position for all tetromino types
-   */
-  'should calculate drop position for all tetromino shapes': () => {
-    // Test implementation would verify:
-    // - I, O, T, S, Z, J, L pieces all calculate correctly
-    // - Different rotations are handled properly
-    // - Shape-specific collision detection works
-  },
-
-  /**
-   * Test: Edge cases and boundaries
-   */
-  'should handle edge cases and board boundaries': () => {
-    // Test implementation would verify:
-    // - Pieces at left/right edges
-    // - Full board scenarios
-    // - Invalid positions are handled gracefully
-  },
-
-  /**
-   * Test: Real-time updates
-   */
-  'should update drop position as piece moves': () => {
-    // Test implementation would verify:
-    // - Position updates when piece moves horizontally
-    // - Position updates when piece rotates
-    // - Updates are efficient and don't cause performance issues
-  },
+// Test helper to create specific tetromino shapes
+const createTetromino = (type: TetrominoType): Tetromino => {
+  const shapes: Record<TetrominoType, number[][]> = {
+    I: [
+      [0, 0, 0, 0],
+      [1, 1, 1, 1],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+    O: [
+      [0, 0, 0, 0],
+      [0, 1, 1, 0],
+      [0, 1, 1, 0],
+      [0, 0, 0, 0],
+    ],
+    T: [
+      [0, 0, 0, 0],
+      [0, 1, 0, 0],
+      [1, 1, 1, 0],
+      [0, 0, 0, 0],
+    ],
+    S: [
+      [0, 0, 0, 0],
+      [0, 1, 1, 0],
+      [1, 1, 0, 0],
+      [0, 0, 0, 0],
+    ],
+    Z: [
+      [0, 0, 0, 0],
+      [1, 1, 0, 0],
+      [0, 1, 1, 0],
+      [0, 0, 0, 0],
+    ],
+    J: [
+      [0, 0, 0, 0],
+      [1, 0, 0, 0],
+      [1, 1, 1, 0],
+      [0, 0, 0, 0],
+    ],
+    L: [
+      [0, 0, 0, 0],
+      [0, 0, 1, 0],
+      [1, 1, 1, 0],
+      [0, 0, 0, 0],
+    ],
+  };
+  return { type, shape: shapes[type].map(row => [...row]) };
 };
 
-/**
- * Visual accessibility tests for the drop assistant
- */
-export const accessibilityTests = {
-  /**
-   * Test: Visual distinction
-   */
-  'should have visually distinct appearance from regular pieces': () => {
-    // Test implementation would verify:
-    // - Dashed outline is clearly visible
-    // - Color contrast meets WCAG standards
-    // - Distinguishable on all background colors
-  },
-
-  /**
-   * Test: Screen reader support
-   */
-  'should be accessible to screen readers': () => {
-    // Test implementation would verify:
-    // - Drop position is announced to screen readers
-    // - ARIA labels are descriptive and helpful
-    // - Position changes are communicated effectively
-  },
-
-  /**
-   * Test: Animation and visual effects
-   */
-  'should have appropriate visual feedback': () => {
-    // Test implementation would verify:
-    // - Pulse animation is smooth and not distracting
-    // - Animation respects user's motion preferences
-    // - Visual effects enhance rather than hinder gameplay
-  },
+// Test helper to create a board with specific obstacles
+const createBoardWithObstacles = (obstacles: Array<{ x: number; y: number; type: TetrominoType }>): Board => {
+  const board = createEmptyBoard();
+  obstacles.forEach(({ x, y, type }) => {
+    board[y][x] = type;
+  });
+  return board;
 };
 
-/**
- * Performance tests for the drop assistant
- */
-export const performanceTests = {
-  /**
-   * Test: Calculation efficiency
-   */
-  'should calculate drop position efficiently': () => {
-    // Test implementation would verify:
-    // - Calculation time is under acceptable threshold
-    // - No unnecessary recalculations occur
-    // - Memory usage is optimized
-  },
+describe('Drop Assistant - Basic Functionality', () => {
+  test('should calculate correct drop position for I-piece on empty board', () => {
+    const board = createEmptyBoard();
+    const iPiece = createTetromino('I');
+    const startPos: Point = { x: 3, y: 0 };
+    
+    const dropPos = getDropPosition(board, iPiece, startPos);
+    
+    expect(dropPos.x).toBe(3);
+    expect(dropPos.y).toBe(18); // Should be at row 18 (bottom minus piece height)
+  });
 
-  /**
-   * Test: Rendering performance
-   */
-  'should render without affecting game performance': () => {
-    // Test implementation would verify:
-    // - Frame rate remains stable with assistant enabled
-    // - No visual stuttering or lag
-    // - Smooth transitions when toggling on/off
-  },
-};
+  test('should calculate drop position with existing pieces on board', () => {
+    const board = createBoardWithObstacles([
+      { x: 3, y: 19, type: 'O' },
+      { x: 4, y: 19, type: 'O' },
+      { x: 5, y: 19, type: 'O' },
+      { x: 6, y: 19, type: 'O' },
+    ]);
+    const iPiece = createTetromino('I');
+    const startPos: Point = { x: 3, y: 0 };
+    
+    const dropPos = getDropPosition(board, iPiece, startPos);
+    
+    expect(dropPos.x).toBe(3);
+    expect(dropPos.y).toBe(17); // Should stop one row above the obstacles
+  });
 
-/**
- * Integration tests for drop assistant with game mechanics
- */
-export const integrationTests = {
-  /**
-   * Test: Single player integration
-   */
-  'should work correctly in single player mode': () => {
-    // Test implementation would verify:
-    // - Assistant shows/hides based on settings
-    // - Position updates correctly during gameplay
-    // - Works with all game controls (move, rotate, drop)
-  },
+  test('should calculate drop position for all tetromino shapes', () => {
+    const board = createEmptyBoard();
+    const types: TetrominoType[] = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+    
+    types.forEach(type => {
+      const piece = createTetromino(type);
+      const startPos: Point = { x: 3, y: 0 };
+      
+      const dropPos = getDropPosition(board, piece, startPos);
+      
+      expect(dropPos.x).toBe(3);
+      expect(dropPos.y).toBeGreaterThanOrEqual(0);
+      expect(dropPos.y).toBeLessThan(20);
+      expect(checkCollision(board, piece, dropPos)).toBe(false);
+      expect(checkCollision(board, piece, { x: dropPos.x, y: dropPos.y + 1 })).toBe(true);
+    });
+  });
 
-  /**
-   * Test: Two player integration
-   */
-  'should work correctly in two player mode': () => {
-    // Test implementation would verify:
-    // - Both players can use assistant independently
-    // - No performance impact with dual rendering
-    // - Visual distinction between player boards
-  },
+  test('should handle edge cases and board boundaries', () => {
+    const board = createEmptyBoard();
+    const iPiece = createTetromino('I');
+    
+    // Test left edge
+    const leftEdgePos = getDropPosition(board, iPiece, { x: 0, y: 0 });
+    expect(leftEdgePos.x).toBe(0);
+    expect(checkCollision(board, iPiece, leftEdgePos)).toBe(false);
+    
+    // Test right edge
+    const rightEdgePos = getDropPosition(board, iPiece, { x: 6, y: 0 });
+    expect(rightEdgePos.x).toBe(6);
+    expect(checkCollision(board, iPiece, rightEdgePos)).toBe(false);
+  });
 
-  /**
-   * Test: Settings integration
-   */
-  'should respond to settings changes immediately': () => {
-    // Test implementation would verify:
-    // - Enabling/disabling takes effect immediately
-    // - No game restart required
-    // - Setting persists across game sessions
-  },
-};
+  test('should update drop position as piece moves horizontally', () => {
+    const board = createBoardWithObstacles([
+      { x: 5, y: 19, type: 'O' }, // Obstacle on the right side
+    ]);
+    const iPiece = createTetromino('I');
+    
+    const leftDropPos = getDropPosition(board, iPiece, { x: 1, y: 5 });
+    const rightDropPos = getDropPosition(board, iPiece, { x: 5, y: 5 });
+    
+    expect(leftDropPos.y).toBe(18); // No obstacle, drops to bottom
+    expect(rightDropPos.y).toBe(17); // Obstacle present, stops earlier
+  });
 
-/**
- * Manual testing scenarios for drop assistant feature:
- * 
- * 1. Enable assistant in settings, verify dashed outline appears
- * 2. Move piece left/right, verify outline follows
- * 3. Rotate piece, verify outline updates to new shape
- * 4. Test with all tetromino types and rotations
- * 5. Test on boards with various obstacle configurations
- * 6. Verify outline is visually distinct from regular pieces
- * 7. Test keyboard navigation and screen reader announcements
- * 8. Verify setting persists after page reload
- * 9. Test performance with assistant enabled during fast gameplay
- * 10. Verify outline disappears when assistant is disabled
- */
+  test('should update drop position when piece rotates', () => {
+    const board = createEmptyBoard();
+    const iPiece = createTetromino('I');
+    const rotatedI = rotateTetromino(iPiece);
+    const startPos: Point = { x: 3, y: 0 };
+    
+    const originalDropPos = getDropPosition(board, iPiece, startPos);
+    const rotatedDropPos = getDropPosition(board, rotatedI, startPos);
+    
+    // Rotated I-piece should have different drop position due to different shape
+    expect(originalDropPos.y).not.toBe(rotatedDropPos.y);
+  });
+});
 
-export const manualTestingScenarios = [
-  'Enable assistant and verify dashed outline appears at drop position',
-  'Move piece horizontally and verify outline follows correctly',
-  'Rotate piece and verify outline updates to match new orientation',
-  'Test all tetromino types (I, O, T, S, Z, J, L) with assistant',
-  'Test on board with various obstacles and complex configurations',
-  'Verify visual distinction from regular pieces meets accessibility standards',
-  'Test keyboard navigation and screen reader compatibility',
-  'Verify setting persistence across browser sessions',
-  'Performance test during rapid gameplay with assistant enabled',
-  'Verify immediate toggle response when disabling assistant',
-];
+describe('Drop Assistant - Performance', () => {
+  test('should calculate drop position efficiently', () => {
+    const board = createEmptyBoard();
+    const piece = createTetromino('T');
+    const startPos: Point = { x: 3, y: 0 };
+    
+    const startTime = performance.now();
+    for (let i = 0; i < 1000; i++) {
+      getDropPosition(board, piece, startPos);
+    }
+    const endTime = performance.now();
+    
+    const averageTime = (endTime - startTime) / 1000;
+    expect(averageTime).toBeLessThan(1); // Should be less than 1ms per calculation
+  });
+
+  test('should handle complex board configurations efficiently', () => {
+    // Create a complex board with many obstacles
+    const obstacles = [];
+    for (let y = 10; y < 20; y++) {
+      for (let x = 0; x < 10; x++) {
+        if (Math.random() > 0.5) {
+          obstacles.push({ x, y, type: 'O' as TetrominoType });
+        }
+      }
+    }
+    const board = createBoardWithObstacles(obstacles);
+    const piece = createTetromino('T');
+    
+    const startTime = performance.now();
+    getDropPosition(board, piece, { x: 3, y: 0 });
+    const endTime = performance.now();
+    
+    expect(endTime - startTime).toBeLessThan(10); // Should complete quickly even with complex board
+  });
+});
+
+describe('Drop Assistant - Edge Cases', () => {
+  test('should handle piece that cannot drop further', () => {
+    const board = createEmptyBoard();
+    const piece = createTetromino('O');
+    const bottomPos: Point = { x: 3, y: 18 };
+    
+    const dropPos = getDropPosition(board, piece, bottomPos);
+    
+    expect(dropPos).toEqual(bottomPos); // Should return same position if already at bottom
+  });
+
+  test('should handle piece at invalid starting position', () => {
+    const board = createEmptyBoard();
+    // Fill the top row to create collision at starting position
+    for (let x = 0; x < 10; x++) {
+      board[1][x] = 'O';
+    }
+    const piece = createTetromino('O');
+    const blockedPos: Point = { x: 3, y: 0 };
+    
+    // Should still calculate a valid drop position without throwing
+    expect(() => {
+      getDropPosition(board, piece, blockedPos);
+    }).not.toThrow();
+  });
+
+  test('should handle full board scenario', () => {
+    const board = createEmptyBoard();
+    // Fill most of the board
+    for (let y = 2; y < 20; y++) {
+      for (let x = 0; x < 10; x++) {
+        board[y][x] = 'O';
+      }
+    }
+    const piece = createTetromino('I');
+    const startPos: Point = { x: 3, y: 0 };
+    
+    const dropPos = getDropPosition(board, piece, startPos);
+    
+    expect(dropPos.y).toBe(0); // Should stay at top if board is full
+  });
+});
+
+describe('Drop Assistant - All Tetromino Types and Rotations', () => {
+  const types: TetrominoType[] = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+  
+  types.forEach(type => {
+    test(`should handle ${type} piece in all rotations`, () => {
+      const board = createEmptyBoard();
+      let piece = createTetromino(type);
+      const startPos: Point = { x: 3, y: 0 };
+      
+      // Test all 4 rotations
+      for (let rotation = 0; rotation < 4; rotation++) {
+        const dropPos = getDropPosition(board, piece, startPos);
+        
+        expect(dropPos.x).toBe(3);
+        expect(dropPos.y).toBeGreaterThanOrEqual(0);
+        expect(dropPos.y).toBeLessThan(20);
+        expect(checkCollision(board, piece, dropPos)).toBe(false);
+        
+        piece = rotateTetromino(piece);
+      }
+    });
+  });
+});
+
+describe('Drop Assistant - Integration with Game Mechanics', () => {
+  test('should work correctly with piece placement', () => {
+    const board = createEmptyBoard();
+    const piece = createTetromino('T');
+    const startPos: Point = { x: 3, y: 0 };
+    
+    const dropPos = getDropPosition(board, piece, startPos);
+    const boardWithPiece = placeTetromino(board, piece, dropPos);
+    
+    // Verify piece was placed correctly at the drop position
+    expect(boardWithPiece[dropPos.y + 1][dropPos.x + 1]).toBe('T'); // T-piece center
+    expect(boardWithPiece[dropPos.y + 2][dropPos.x]).toBe('T'); // T-piece left
+    expect(boardWithPiece[dropPos.y + 2][dropPos.x + 1]).toBe('T'); // T-piece center bottom
+    expect(boardWithPiece[dropPos.y + 2][dropPos.x + 2]).toBe('T'); // T-piece right
+  });
+
+  test('should provide consistent results with collision detection', () => {
+    const board = createEmptyBoard();
+    const piece = createTetromino('L');
+    const startPos: Point = { x: 4, y: 5 };
+    
+    const dropPos = getDropPosition(board, piece, startPos);
+    
+    // The drop position should not cause collision
+    expect(checkCollision(board, piece, dropPos)).toBe(false);
+    
+    // One position lower should cause collision
+    expect(checkCollision(board, piece, { x: dropPos.x, y: dropPos.y + 1 })).toBe(true);
+  });
+});
+
+describe('Drop Assistant - Boundary Conditions', () => {
+  test('should handle piece near left boundary', () => {
+    const board = createEmptyBoard();
+    const piece = createTetromino('J');
+    
+    const dropPos = getDropPosition(board, piece, { x: 0, y: 0 });
+    
+    expect(dropPos.x).toBe(0);
+    expect(checkCollision(board, piece, dropPos)).toBe(false);
+  });
+
+  test('should handle piece near right boundary', () => {
+    const board = createEmptyBoard();
+    const piece = createTetromino('L');
+    
+    const dropPos = getDropPosition(board, piece, { x: 7, y: 0 });
+    
+    expect(dropPos.x).toBe(7);
+    expect(checkCollision(board, piece, dropPos)).toBe(false);
+  });
+
+  test('should handle very tall obstacles', () => {
+    const board = createEmptyBoard();
+    // Create a tall obstacle
+    for (let y = 5; y < 20; y++) {
+      board[y][4] = 'I';
+      board[y][5] = 'I';
+    }
+    
+    const piece = createTetromino('O');
+    const dropPos = getDropPosition(board, piece, { x: 4, y: 0 });
+    
+    expect(dropPos.y).toBe(3); // Should stop above the tall obstacle
+  });
+});

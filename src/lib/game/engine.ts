@@ -71,15 +71,15 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const score = state.score + getScore(linesCleared, state.level);
       const lines = state.lines + linesCleared;
       const level = 1 + Math.floor(lines / 10);
-      const next = state.next;
-      const current = getRandomTetromino();
+      const current = state.next;
+      const next = getRandomTetromino();
       const position = { x: 3, y: 0 };
-      const over = checkCollision(cleared, next, position);
+      const over = checkCollision(cleared, current, position);
       return {
         ...state,
         board: cleared,
-        current: next,
-        next: current,
+        current,
+        next,
         position,
         score,
         lines,
@@ -99,15 +99,15 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const score = state.score + getScore(linesCleared, state.level);
       const lines = state.lines + linesCleared;
       const level = 1 + Math.floor(lines / 10);
-      const next = state.next;
-      const current = getRandomTetromino();
+      const current = state.next;
+      const next = getRandomTetromino();
       const position = { x: 3, y: 0 };
-      const over = checkCollision(cleared, next, position);
+      const over = checkCollision(cleared, current, position);
       return {
         ...state,
         board: cleared,
-        current: next,
-        next: current,
+        current,
+        next,
         position,
         score,
         lines,
