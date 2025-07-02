@@ -20,7 +20,19 @@ const RetroGameLayout: React.FC<RetroGameLayoutProps> = ({
   showAnimatedBg = false 
 }) => {
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
+    <div 
+      className="relative w-screen h-screen overflow-hidden"
+      style={{
+        width: '100vw',
+        height: '100vh',
+        maxWidth: '100vw',
+        maxHeight: '100vh',
+        overflow: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0
+      }}
+    >
       {/* Animated background (optional, lighter for gameplay) */}
       {showAnimatedBg && (
         <div className="opacity-20">
@@ -67,7 +79,14 @@ const RetroGameLayout: React.FC<RetroGameLayoutProps> = ({
       />
       
       {/* Content */}
-      <div className="relative z-10">
+      <div 
+        className="relative z-10 w-full h-full overflow-hidden"
+        style={{
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden'
+        }}
+      >
         {children}
       </div>
     </div>

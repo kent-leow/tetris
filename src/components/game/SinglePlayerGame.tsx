@@ -9,6 +9,7 @@ import { submitLeaderboardEntry } from '@/lib/highscore/submitLeaderboardEntry';
 import { useRouter } from 'next/navigation';
 import RetroGameOverlay from './RetroGameOverlay';
 import RetroGameHUD from './RetroGameHUD';
+import { useNoScroll } from '../../lib/game/useNoScroll';
 
 /**
  * SinglePlayerGame
@@ -33,6 +34,9 @@ const SinglePlayerGame: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const gameOverAudioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
+
+  // Prevent all scrolling during gameplay
+  useNoScroll();
 
   // Vibrate effect state
   const [vibrate, setVibrate] = useState(false);
@@ -321,7 +325,16 @@ const SinglePlayerGame: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col items-center justify-center p-4">
+    <div 
+      className="relative w-screen h-screen flex flex-col items-center justify-center p-4 overflow-hidden"
+      style={{
+        width: '100vw',
+        height: '100vh',
+        maxWidth: '100vw',
+        maxHeight: '100vh',
+        overflow: 'hidden'
+      }}
+    >
       {/* Background music audio element */}
       <audio
         ref={audioRef}
@@ -358,14 +371,20 @@ const SinglePlayerGame: React.FC = () => {
 
       {/* Main Game Interface */}
       {gameStarted && (
-        <div className="flex flex-row gap-8 items-start justify-center w-full max-w-6xl">
+        <div 
+          className="flex flex-row gap-4 items-center justify-center w-full h-full max-w-6xl overflow-hidden"
+          style={{
+            maxHeight: '100vh',
+            overflow: 'hidden'
+          }}
+        >
           {/* Game Board */}
           <div className="flex-shrink-0">
             {renderBoard()}
           </div>
           
           {/* HUD Panel */}
-          <div className="flex-shrink-0 min-w-[240px]">
+          <div className="flex-shrink-0 min-w-[240px] max-w-[300px]">
             <RetroGameHUD
               score={state.score}
               level={state.level}

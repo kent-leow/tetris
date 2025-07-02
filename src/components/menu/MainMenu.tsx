@@ -10,6 +10,7 @@ import { useLeaderboard } from '../../lib/highscore/useLeaderboard';
 import AnimatedBackground from './AnimatedBackground';
 import RetroText from './RetroText';
 import RetroButton from './RetroButton';
+import { useNoScroll } from '../../lib/game/useNoScroll';
 
 /**
  * MainMenu component displays the main menu for the Tetris game.
@@ -32,6 +33,9 @@ const MainMenu: React.FC = () => {
   const toggleMuted = useAudioStore((s) => s.toggleMuted);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
+
+  // Prevent all scrolling on this page
+  useNoScroll();
 
   // Toggle audio.muted property and ensure proper audio initialization
   useEffect(() => {
@@ -144,10 +148,17 @@ const MainMenu: React.FC = () => {
       
       <nav
         aria-label="Main Menu"
-        className="relative flex flex-col items-center justify-center min-h-screen text-white px-4 z-10"
+        className="relative flex flex-col items-center justify-center h-screen w-screen text-white px-4 z-10 overflow-hidden"
+        style={{
+          height: '100vh',
+          width: '100vw',
+          maxHeight: '100vh',
+          maxWidth: '100vw',
+          overflow: 'hidden'
+        }}
       >
         {/* Main title with retro styling */}
-        <div className="mb-12 text-center">
+        <div className="mb-8 text-center flex-shrink-0">
           <RetroText size="4xl" variant="primary" glow scanlines className="mb-2">
             Tetris
           </RetroText>
@@ -158,7 +169,7 @@ const MainMenu: React.FC = () => {
 
         {/* Highscore Display with retro styling */}
         <div
-          className="mb-8 w-full max-w-md flex items-center justify-center bg-gray-900 bg-opacity-50 border-2 border-yellow-400 p-4 backdrop-blur-sm"
+          className="mb-6 w-full max-w-md flex items-center justify-center bg-gray-900 bg-opacity-50 border-2 border-yellow-400 p-4 backdrop-blur-sm flex-shrink-0"
           aria-live="polite"
           aria-atomic="true"
           style={{
@@ -183,12 +194,12 @@ const MainMenu: React.FC = () => {
         </div>
 
         {/* Game mode selection */}
-        <div className="mb-8 w-full max-w-md">
+        <div className="mb-6 w-full max-w-md flex-shrink-0">
           <GameModeMenu onSelectMode={handleSelectMode} selectedMode={selectedMode} />
         </div>
 
         {/* Menu buttons */}
-        <div className="w-full max-w-md space-y-4" role="menu">
+        <div className="w-full max-w-md space-y-3 flex-shrink-0" role="menu">
           <RetroButton
             onClick={handleStartGame}
             disabled={!selectedMode}
@@ -228,7 +239,7 @@ const MainMenu: React.FC = () => {
         </div>
 
         {/* Retro decorative elements */}
-        <div className="mt-12 text-center">
+        <div className="mt-8 text-center flex-shrink-0">
           <RetroText size="sm" variant="primary" glow={false} className="opacity-60">
             Use arrow keys to navigate • Enter to select
           </RetroText>
