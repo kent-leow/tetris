@@ -2,9 +2,10 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAudioStore } from '../../lib/audio/store';
-import { BG_MUSIC_VOLUME } from '../../lib/audio/constants';
+import { useSettingsStore } from '../../lib/settings/store';
 import { GameOverOverlay } from './GameOverOverlay';
 import { gameReducer, initGameState, GameState, GameAction } from '@/lib/game/engine';
+import { getDropPosition } from '@/lib/game/types';
 import { submitLeaderboardEntry } from '@/lib/highscore/submitLeaderboardEntry';
 import { useRouter } from 'next/navigation';
 import RetroGameOverlay from './RetroGameOverlay';
@@ -29,8 +30,10 @@ const SinglePlayerGame: React.FC = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const muted = useAudioStore((s) => s.muted);
   const toggleMuted = useAudioStore((s) => s.toggleMuted);
+  const getMusicVolume = useAudioStore((s) => s.getMusicVolume);
   const playDrop = useAudioStore((s) => s.playDrop);
   const playVanish = useAudioStore((s) => s.playVanish);
+  const assistantEnabled = useSettingsStore((s) => s.assistantEnabled);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const gameOverAudioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
@@ -45,14 +48,14 @@ const SinglePlayerGame: React.FC = () => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = muted;
-    audio.volume = BG_MUSIC_VOLUME / 2;
+    audio.volume = getMusicVolume() / 2;
     // Only play music when game has started and not muted
     if (gameStarted && !muted) {
       audio.play().catch(() => {});
     } else {
       audio.pause();
     }
-  }, [muted, gameStarted]);
+  }, [muted, gameStarted, getMusicVolume]);
 
   // Pause music on unmount
   useEffect(() => {
@@ -253,11 +256,16 @@ const SinglePlayerGame: React.FC = () => {
     prevStateRef.current = state;
   }, [state.board, state.position.y, state.over, state.lines, playDrop, playVanish]);
 
-  // Board rendering with retro styling
+  // Board rendering with retro styling and drop assistant
   const renderBoard = () => {
     // Merge current tetromino into board for display
     const display: (string | null)[][] = state.board.map((row: (string | null)[]) => [...row]);
     const { current, position } = state;
+    
+    // Calculate drop position for assistant
+    const dropPosition = assistantEnabled ? getDropPosition(state.board, current, position) : null;
+    
+    // Add current piece to display
     for (let y = 0; y < 4; y++) {
       for (let x = 0; x < 4; x++) {
         if (current.shape[y][x]) {
@@ -269,6 +277,7 @@ const SinglePlayerGame: React.FC = () => {
         }
       }
     }
+    
     return (
       <div 
         className={`grid grid-rows-20 grid-cols-10 gap-[1px] border-2 border-cyan-400 overflow-hidden backdrop-blur-sm ${vibrate ? 'animate-pulse' : ''}`}
@@ -281,20 +290,44 @@ const SinglePlayerGame: React.FC = () => {
         aria-label="Tetris board"
         role="grid"
       >
-        {display.flat().map((cell, i) => (
-          <div
-            key={i}
-            className={`w-8 h-8 flex items-center justify-center text-xs font-bold border border-gray-700 ${
-              cell ? `tetromino-${cell}` : 'bg-black bg-opacity-50'
-            }`}
-            style={cell ? {
-              boxShadow: '0 0 5px currentColor',
-              textShadow: '0 0 3px currentColor',
-            } : {}}
-            role="gridcell"
-            aria-label={cell ? cell : 'empty'}
-          />
-        ))}
+        {display.flatMap((row, rowIndex) =>
+          row.map((cell, colIndex) => {
+            const isAssistantCell = assistantEnabled && dropPosition && 
+              current.shape.some((shapeRow, shapeY) =>
+                shapeRow.some((shapeCell, shapeX) =>
+                  shapeCell && 
+                  dropPosition.x + shapeX === colIndex && 
+                  dropPosition.y + shapeY === rowIndex &&
+                  !cell // Only show assistant on empty cells
+                )
+              );
+              
+            return (
+              <div
+                key={`${rowIndex}-${colIndex}`}
+                className={`w-8 h-8 flex items-center justify-center text-xs font-bold border border-gray-700 ${
+                  cell ? `tetromino-${cell}` : 
+                  isAssistantCell ? 'assistant-outline' :
+                  'bg-black bg-opacity-50'
+                }`}
+                style={cell ? {
+                  boxShadow: '0 0 5px currentColor',
+                  textShadow: '0 0 3px currentColor',
+                } : isAssistantCell ? {
+                  border: '2px dashed rgba(255, 255, 255, 0.6)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  animation: 'pulse 2s infinite',
+                } : {}}
+                role="gridcell"
+                aria-label={
+                  cell ? cell : 
+                  isAssistantCell ? 'drop position preview' : 
+                  'empty'
+                }
+              />
+            );
+          })
+        )}
       </div>
     );
   };
@@ -427,7 +460,7 @@ const SinglePlayerGame: React.FC = () => {
         </div>
       )}
 
-      {/* Enhanced Tetromino color styles with glow effects */}
+      {/* Enhanced Tetromino color styles with glow effects and assistant styles */}
       <style jsx global>{`
         .tetromino-I { 
           background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
@@ -456,6 +489,28 @@ const SinglePlayerGame: React.FC = () => {
         .tetromino-L { 
           background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
           color: #fbbf24;
+        }
+        .assistant-outline {
+          position: relative;
+          background: rgba(255, 255, 255, 0.05);
+        }
+        .assistant-outline::before {
+          content: '';
+          position: absolute;
+          inset: 1px;
+          border: 2px dashed rgba(255, 255, 255, 0.6);
+          border-radius: 1px;
+          animation: assistantPulse 2s ease-in-out infinite;
+        }
+        @keyframes assistantPulse {
+          0%, 100% { 
+            opacity: 0.6;
+            border-color: rgba(255, 255, 255, 0.6);
+          }
+          50% { 
+            opacity: 1;
+            border-color: rgba(255, 255, 255, 0.9);
+          }
         }
       `}</style>
     </div>

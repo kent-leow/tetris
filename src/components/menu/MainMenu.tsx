@@ -2,10 +2,11 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useAudioStore } from '../../lib/audio/store';
-import { BG_MUSIC_VOLUME } from '../../lib/audio/constants';
+import { useSettingsStore } from '../../lib/settings/store';
 import { useRouter } from 'next/navigation';
 import GameModeMenu, { GameMode } from "./GameModeMenu";
 import LeaderboardOverlay from './LeaderboardOverlay';
+import SettingsOverlay from './SettingsOverlay';
 import { useLeaderboard } from '../../lib/highscore/useLeaderboard';
 import AnimatedBackground from './AnimatedBackground';
 import RetroText from './RetroText';
@@ -29,8 +30,10 @@ const MainMenu: React.FC = () => {
   const [selectedMode, setSelectedMode] = useState<GameMode | undefined>(undefined);
   const { entries, loading: leaderboardLoading, refetch: refetchLeaderboard } = useLeaderboard();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const muted = useAudioStore((s) => s.muted);
   const toggleMuted = useAudioStore((s) => s.toggleMuted);
+  const getMusicVolume = useAudioStore((s) => s.getMusicVolume);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
 
@@ -50,7 +53,7 @@ const MainMenu: React.FC = () => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = muted;
-    audio.volume = BG_MUSIC_VOLUME;
+    audio.volume = getMusicVolume();
     
     // Start playing music if not muted
     if (!muted) {
@@ -72,7 +75,7 @@ const MainMenu: React.FC = () => {
     } else {
       audio.pause();
     }
-  }, [muted]);
+  }, [muted, getMusicVolume]);
 
   // Pause music on unmount
   useEffect(() => {
@@ -104,8 +107,17 @@ const MainMenu: React.FC = () => {
     setShowLeaderboard(true);
     refetchLeaderboard();
   }, [refetchLeaderboard]);
+  
   const handleCloseLeaderboard = useCallback(() => {
     setShowLeaderboard(false);
+  }, []);
+
+  const handleShowSettings = useCallback(() => {
+    setShowSettings(true);
+  }, []);
+  
+  const handleCloseSettings = useCallback(() => {
+    setShowSettings(false);
   }, []);
 
   // Single player game now handled by /single route
@@ -228,11 +240,14 @@ const MainMenu: React.FC = () => {
           </RetroButton>
 
           <RetroButton
+            onClick={handleShowSettings}
             variant="accent"
             size="lg"
             className="w-full"
             role="menuitem"
             tabIndex={0}
+            aria-haspopup="dialog"
+            aria-expanded={showSettings}
           >
             Settings
           </RetroButton>
@@ -252,6 +267,11 @@ const MainMenu: React.FC = () => {
         entries={entries}
         loading={leaderboardLoading}
         onRefresh={refetchLeaderboard}
+      />
+      
+      <SettingsOverlay
+        open={showSettings}
+        onClose={handleCloseSettings}
       />
     </>
   );

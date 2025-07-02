@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { BG_MUSIC_VOLUME, SFX_VOLUME } from './constants';
-
+import { useSettingsStore } from '../settings/store';
 
 interface AudioStore {
   muted: boolean;
@@ -8,6 +8,10 @@ interface AudioStore {
   toggleMuted: () => void;
   playDrop: () => void;
   playVanish: () => void;
+  /** Get current music volume from settings */
+  getMusicVolume: () => number;
+  /** Get current SFX volume from settings */
+  getSfxVolume: () => number;
 }
 
 /**
@@ -29,16 +33,22 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
     }
     return { muted: newMuted };
   }),
+  getMusicVolume: () => {
+    return useSettingsStore.getState().musicVolume;
+  },
+  getSfxVolume: () => {
+    return useSettingsStore.getState().sfxVolume;
+  },
   playDrop: () => {
     if (typeof window === 'undefined' || get().muted) return;
     const audio = new window.Audio('/drop-sound.mp3');
-    audio.volume = SFX_VOLUME;
+    audio.volume = get().getSfxVolume();
     audio.play().catch(() => {});
   },
   playVanish: () => {
     if (typeof window === 'undefined' || get().muted) return;
     const audio = new window.Audio('/vanish-sound.mp3');
-    audio.volume = SFX_VOLUME;
+    audio.volume = get().getSfxVolume();
     audio.play().catch(() => {});
   },
 }));

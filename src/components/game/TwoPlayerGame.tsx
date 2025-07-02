@@ -3,14 +3,14 @@
 
 import React, { useReducer, useCallback, useEffect, useRef, useState } from 'react';
 import { useAudioStore } from '../../lib/audio/store';
-import { BG_MUSIC_VOLUME } from '../../lib/audio/constants';
+import { useSettingsStore } from '../../lib/settings/store';
 import {
   twoPlayerGameReducer,
   initTwoPlayerGameState,
   TwoPlayerGameState,
   TwoPlayerAction,
 } from '../../lib/game/twoPlayerEngine';
-import { Tetromino } from '../../lib/game/types';
+import { Tetromino, getDropPosition } from '../../lib/game/types';
 import NextTetrominoPreview from './NextTetrominoPreview';
 import { useRouter } from 'next/navigation';
 import RetroGameOverlay from './RetroGameOverlay';
@@ -37,8 +37,10 @@ const TwoPlayerGame: React.FC = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const muted = useAudioStore((s) => s.muted);
   const toggleMuted = useAudioStore((s) => s.toggleMuted);
+  const getMusicVolume = useAudioStore((s) => s.getMusicVolume);
   const playDrop = useAudioStore((s) => s.playDrop);
   const playVanish = useAudioStore((s) => s.playVanish);
+  const assistantEnabled = useSettingsStore((s) => s.assistantEnabled);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const gameEndAudioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
@@ -58,7 +60,7 @@ const TwoPlayerGame: React.FC = () => {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.volume = BG_MUSIC_VOLUME / 2;
+    audio.volume = getMusicVolume() / 2;
     audio.muted = muted;
     if (gameStarted && !audio.muted) {
       audio.currentTime = 0;
@@ -66,7 +68,7 @@ const TwoPlayerGame: React.FC = () => {
     } else {
       audio.pause();
     }
-  }, [muted, gameStarted]);
+  }, [muted, gameStarted, getMusicVolume]);
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -282,10 +284,16 @@ interface PlayerBoardProps {
 const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore, isWinner }) => {
   const playDrop = useAudioStore((s) => s.playDrop);
   const playVanish = useAudioStore((s) => s.playVanish);
+  const assistantEnabled = useSettingsStore((s) => s.assistantEnabled);
   
   // Merge current tetromino into board for display
   const display: (string | null)[][] = state.board.map((row: (string | null)[]) => [...row]);
   const { current, position } = state;
+  
+  // Calculate drop position for assistant
+  const dropPosition = assistantEnabled ? getDropPosition(state.board, current, position) : null;
+  
+  // Add current piece to display
   for (let y = 0; y < 4; y++) {
     for (let x = 0; x < 4; x++) {
       if (current.shape[y][x]) {
@@ -433,7 +441,14 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
           boxShadow: `0 0 20px rgba(${playerColorRgb}, 0.4)`,
         }}
       >
-        <BoardGrid board={display} vibrate={vibrate} />
+        <BoardGrid 
+          board={display} 
+          vibrate={vibrate} 
+          assistantEnabled={assistantEnabled}
+          current={current}
+          position={position}
+          dropPosition={dropPosition}
+        />
       </div>
       {player === 2 && infoBlock}
     </div>
@@ -443,7 +458,14 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
 
 
 
-const BoardGrid: React.FC<{ board: (string | null)[][]; vibrate?: boolean }> = ({ board, vibrate }) => {
+const BoardGrid: React.FC<{ 
+  board: (string | null)[][]; 
+  vibrate?: boolean; 
+  assistantEnabled?: boolean;
+  current?: Tetromino;
+  position?: { x: number; y: number };
+  dropPosition?: { x: number; y: number } | null;
+}> = ({ board, vibrate, assistantEnabled, current, position, dropPosition }) => {
   const [cellSize, setCellSize] = useState(28);
 
   useEffect(() => {
@@ -476,21 +498,44 @@ const BoardGrid: React.FC<{ board: (string | null)[][]; vibrate?: boolean }> = (
       aria-label="Tetris board"
       role="grid"
     >
-      {board.flat().map((cell, i) => (
-        <div
-          key={i}
-          className={`flex items-center justify-center text-xs font-bold border border-gray-700
-            ${cell === 'G' ? 'bg-yellow-600 border-yellow-500' : cell ? `tetromino-${cell}` : 'bg-gray-800 border-gray-700'}
-          `}
-          style={{ 
-            width: cellSize, 
-            height: cellSize,
-            boxShadow: cell ? '0 0 5px rgba(255, 255, 255, 0.2)' : 'inset 0 0 3px rgba(0, 0, 0, 0.3)',
-          }}
-          role="gridcell"
-          aria-label={cell || 'empty'}
-        />
-      ))}
+      {board.flatMap((row, rowIndex) =>
+        row.map((cell, colIndex) => {
+          const isAssistantCell = assistantEnabled && dropPosition && current &&
+            current.shape.some((shapeRow, shapeY) =>
+              shapeRow.some((shapeCell, shapeX) =>
+                shapeCell && 
+                dropPosition.x + shapeX === colIndex && 
+                dropPosition.y + shapeY === rowIndex &&
+                !cell // Only show assistant on empty cells
+              )
+            );
+            
+          return (
+            <div
+              key={`${rowIndex}-${colIndex}`}
+              className={`flex items-center justify-center text-xs font-bold border border-gray-700
+                ${cell === 'G' ? 'bg-yellow-600 border-yellow-500' : 
+                  cell ? `tetromino-${cell}` : 
+                  isAssistantCell ? 'assistant-outline' :
+                  'bg-gray-800 border-gray-700'}
+              `}
+              style={{ 
+                width: cellSize, 
+                height: cellSize,
+                boxShadow: cell ? '0 0 5px rgba(255, 255, 255, 0.2)' : 
+                          isAssistantCell ? '0 0 3px rgba(255, 255, 255, 0.3)' :
+                          'inset 0 0 3px rgba(0, 0, 0, 0.3)',
+              }}
+              role="gridcell"
+              aria-label={
+                cell ? cell : 
+                isAssistantCell ? 'drop position preview' : 
+                'empty'
+              }
+            />
+          );
+        })
+      )}
     </div>
   );
 };
@@ -538,6 +583,30 @@ if (typeof window !== 'undefined') {
         background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); 
         border-color: #fcd34d;
         box-shadow: 0 0 8px rgba(252, 211, 77, 0.6), inset 0 0 8px rgba(255, 255, 255, 0.2);
+      }
+      
+      /* Drop assistant styles */
+      .assistant-outline {
+        position: relative;
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .assistant-outline::before {
+        content: '';
+        position: absolute;
+        inset: 1px;
+        border: 2px dashed rgba(255, 255, 255, 0.6);
+        border-radius: 1px;
+        animation: assistantPulse 2s ease-in-out infinite;
+      }
+      @keyframes assistantPulse {
+        0%, 100% { 
+          opacity: 0.6;
+          border-color: rgba(255, 255, 255, 0.6);
+        }
+        50% { 
+          opacity: 1;
+          border-color: rgba(255, 255, 255, 0.9);
+        }
       }
       
       /* Vibrate animation for piece landing */
