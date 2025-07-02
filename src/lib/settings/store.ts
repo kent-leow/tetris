@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
 
 /**
  * Settings interface for the Tetris game
@@ -72,21 +73,49 @@ function saveSettings(settings: Settings): void {
 }
 
 /**
- * Global settings store for managing game settings.
- * Uses Zustand with localStorage persistence.
+ * Update music volume for all audio elements in the DOM
  */
-export const useSettingsStore = create<SettingsStore>((set, get) => {
-  const initialSettings = loadSettings();
+function updateMusicVolume(volume: number): void {
+  if (typeof window === 'undefined') return;
   
-  return {
-    ...initialSettings,
+  try {
+    // Update all audio elements that are playing background music
+    const audioElements = Array.from(document.querySelectorAll('audio')) as HTMLAudioElement[];
+    audioElements.forEach(audio => {
+      // Check if this is a background music audio element (not sound effects)
+      if (audio.src && (
+        audio.src.includes('main-menu-music.mp3') ||
+        audio.src.includes('one-player-music.mp3') ||
+        audio.src.includes('two-player-music.mp3')
+      )) {
+        audio.volume = volume;
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to update music volume:', error);
+  }
+}
+
+/**
+ * Global settings store for managing game settings.
+ * Uses Zustand with localStorage persistence and subscriptions for immediate updates.
+ */
+export const useSettingsStore = create<SettingsStore>()(
+  subscribeWithSelector((set, get) => {
+    const initialSettings = loadSettings();
     
-    setMusicVolume: (volume: number) => {
-      const clampedVolume = Math.max(0, Math.min(1, volume));
-      const newSettings = { ...get(), musicVolume: clampedVolume };
-      set(newSettings);
-      saveSettings(newSettings);
-    },
+    return {
+      ...initialSettings,
+      
+      setMusicVolume: (volume: number) => {
+        const clampedVolume = Math.max(0, Math.min(1, volume));
+        const newSettings = { ...get(), musicVolume: clampedVolume };
+        set(newSettings);
+        saveSettings(newSettings);
+        
+        // Apply volume change immediately to all background music
+        updateMusicVolume(clampedVolume);
+      },
     
     setSfxVolume: (volume: number) => {
       const clampedVolume = Math.max(0, Math.min(1, volume));
@@ -106,4 +135,5 @@ export const useSettingsStore = create<SettingsStore>((set, get) => {
       saveSettings(DEFAULT_SETTINGS);
     },
   };
-});
+  })
+);
