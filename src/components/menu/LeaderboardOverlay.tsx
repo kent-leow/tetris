@@ -6,6 +6,7 @@
 import React, { useEffect, useRef } from 'react';
 import RetroText from './RetroText';
 import RetroButton from './RetroButton';
+import './leaderboard-styles.css';
 
 export interface LeaderboardEntry {
   rank: number;
@@ -95,12 +96,17 @@ const LeaderboardOverlay: React.FC<LeaderboardOverlayProps> = ({
 
         {/* Leaderboard Content */}
         <div 
-          className="overflow-y-auto max-h-80 bg-black bg-opacity-30 border border-cyan-400 p-4 rounded-none"
+          className="leaderboard-scroll overflow-y-auto max-h-80 bg-black bg-opacity-30 border border-cyan-400 p-4 rounded-none"
           style={{
             boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)',
+            touchAction: 'pan-y', // Allow vertical scrolling on touch devices
+            overscrollBehavior: 'contain', // Prevent scroll chaining to parent
+            scrollbarWidth: 'thin', // Firefox
+            scrollbarColor: 'rgba(34, 211, 238, 0.8) rgba(0, 0, 0, 0.3)', // Firefox
           }}
           aria-live="polite" 
           aria-atomic="true"
+          data-scrollable="true" // Mark as scrollable for accessibility
         >
           {loading ? (
             <div className="text-center py-8">

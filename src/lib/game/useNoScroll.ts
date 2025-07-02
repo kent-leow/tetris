@@ -1,6 +1,22 @@
 import { useEffect } from 'react';
 
 /**
+ * Configuration options for the useNoScroll hook
+ */
+export interface NoScrollOptions {
+  /**
+   * CSS selectors for elements that should maintain scrolling capability
+   * @default []
+   */
+  allowScrollSelectors?: string[];
+  /**
+   * Whether to allow scrolling within modal/overlay elements
+   * @default false
+   */
+  allowModalScroll?: boolean;
+}
+
+/**
  * Custom hook to prevent all forms of scrolling and ensure
  * the game stays within the viewport boundaries.
  * 
@@ -10,14 +26,41 @@ import { useEffect } from 'react';
  * - Elastic bounce scrolling
  * - Keyboard navigation scrolling
  * - Touch-based scrolling
+ * 
+ * @param options Configuration options for selective scroll allowance
  */
-export const useNoScroll = () => {
+export const useNoScroll = (options: NoScrollOptions = {}) => {
+  const { allowScrollSelectors = [], allowModalScroll = false } = options;
   useEffect(() => {
     // Store original values to restore on cleanup
     const originalHtmlStyle = document.documentElement.style.cssText;
     const originalBodyStyle = document.body.style.cssText;
     const originalHtmlOverflow = document.documentElement.style.overflow;
     const originalBodyOverflow = document.body.style.overflow;
+
+    /**
+     * Check if an element or its parents are in the allowed scroll list
+     */
+    const isScrollAllowed = (element: Element): boolean => {
+      // Check if modal scroll is allowed and element is within a modal/overlay
+      if (allowModalScroll) {
+        const modal = element.closest('[role="dialog"], [aria-modal="true"], .modal, .overlay');
+        if (modal) return true;
+      }
+
+      // Check if element matches any allowed selectors
+      for (const selector of allowScrollSelectors) {
+        try {
+          if (element.matches(selector) || element.closest(selector)) {
+            return true;
+          }
+        } catch (e) {
+          console.warn('Invalid selector for useNoScroll:', selector);
+        }
+      }
+
+      return false;
+    };
 
     // Apply comprehensive scroll prevention
     const preventScroll = () => {
@@ -59,6 +102,11 @@ export const useNoScroll = () => {
       const target = e.target as HTMLElement;
       const isInputElement = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
       
+      // Check if scrolling is allowed for this element
+      if (isScrollAllowed(target)) {
+        return;
+      }
+      
       if (!isInputElement && scrollKeys.includes(e.key)) {
         // Check if this is a game control (allow game controls)
         const gameKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
@@ -77,6 +125,13 @@ export const useNoScroll = () => {
 
     // Prevent touch-based scrolling
     const preventTouchScroll = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Allow scrolling if target is in allowed scroll elements
+      if (target && isScrollAllowed(target)) {
+        return;
+      }
+
       // Allow single touches for taps but prevent multi-touch and swipes
       if (e.touches.length > 1) {
         e.preventDefault();
@@ -85,7 +140,6 @@ export const useNoScroll = () => {
 
       // Prevent pull-to-refresh and overscroll
       const touch = e.touches[0];
-      const target = e.target as HTMLElement;
       
       // Check if we're at the top or bottom and trying to scroll further
       if (target) {
@@ -101,6 +155,13 @@ export const useNoScroll = () => {
 
     // Prevent wheel/trackpad scrolling
     const preventWheelScroll = (e: WheelEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Allow scrolling if target is in allowed scroll elements
+      if (target && isScrollAllowed(target)) {
+        return;
+      }
+
       // Allow zoom with ctrl key, but prevent scrolling
       if (!e.ctrlKey && !e.metaKey) {
         e.preventDefault();
@@ -109,6 +170,13 @@ export const useNoScroll = () => {
 
     // Prevent context menu which can disrupt gameplay
     const preventContextMenu = (e: Event) => {
+      const target = e.target as HTMLElement;
+      
+      // Allow context menu if scrolling is allowed for this element
+      if (target && isScrollAllowed(target)) {
+        return;
+      }
+      
       e.preventDefault();
     };
 
@@ -134,6 +202,12 @@ export const useNoScroll = () => {
     // Prevent focus-based scrolling
     const preventFocusScroll = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
+      
+      // Allow focus scrolling if target is in allowed scroll elements
+      if (target && isScrollAllowed(target)) {
+        return;
+      }
+      
       if (target && target.scrollIntoView) {
         // Override scrollIntoView to prevent automatic scrolling
         target.scrollIntoView = () => {};
@@ -158,7 +232,7 @@ export const useNoScroll = () => {
       document.documentElement.style.cssText = originalHtmlStyle;
       document.body.style.cssText = originalBodyStyle;
     };
-  }, []);
+  }, [allowScrollSelectors, allowModalScroll]);
 };
 
 /**

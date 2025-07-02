@@ -228,3 +228,37 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
+
+/* Custom scrollbar styles for leaderboard */
+.leaderboard-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 211, 238, 0.8) rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.leaderboard-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 0;
+}
+
+.leaderboard-scroll::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.8);
+  border-radius: 0;
+  border: 1px solid rgba(34, 211, 238, 0.4);
+}
+
+.leaderboard-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 1);
+  box-shadow: 0 0 5px rgba(34, 211, 238, 0.5);
+}
+
+/* Ensure leaderboard can scroll within modal */
+[role="dialog"] .leaderboard-scroll,
+[aria-modal="true"] .leaderboard-scroll {
+  overflow-y: auto;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}

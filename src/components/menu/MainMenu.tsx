@@ -34,8 +34,8 @@ const MainMenu: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
 
-  // Prevent all scrolling on this page
-  useNoScroll();
+  // Prevent all scrolling on this page except for modals/overlays
+  useNoScroll({ allowModalScroll: true });
 
   // Toggle audio.muted property and ensure proper audio initialization
   useEffect(() => {
