@@ -505,23 +505,146 @@ describe('Settings Store - Integration Scenarios', () => {
       setAssistantEnabled(i % 2 === 0);
     }
 
-    // Final values should be correct
+    // Final values should be correct (i=9 is the last iteration)
     expect(useStore.getState().musicVolume).toBe(0.9);
     expect(useStore.getState().sfxVolume).toBe(0.1);
-    expect(useStore.getState().assistantEnabled).toBe(true);
+    expect(useStore.getState().assistantEnabled).toBe(false); // 9 % 2 === 0 is false
   });
 
   test('should persist settings across store recreations', () => {
+    // Setup shared mock localStorage
+    const sharedMockStorage = createMockLocalStorage();
+    Object.defineProperty(global, 'localStorage', {
+      value: sharedMockStorage,
+      writable: true,
+    });
+
     // First store instance
-    const store1 = createTestStore();
+    const store1 = create<SettingsState>()(
+      subscribeWithSelector((set, get) => {
+        const loadSettings = () => {
+          try {
+            const stored = localStorage.getItem('tetris-settings');
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              return { ...DEFAULT_SETTINGS, ...parsed };
+            }
+          } catch (error) {
+            console.warn('Failed to load settings from localStorage:', error);
+          }
+          return DEFAULT_SETTINGS;
+        };
+
+        const saveSettings = (settings: Partial<SettingsState>) => {
+          try {
+            const current = get();
+            const toSave = {
+              musicVolume: current.musicVolume,
+              sfxVolume: current.sfxVolume,
+              assistantEnabled: current.assistantEnabled,
+              ...settings,
+            };
+            localStorage.setItem('tetris-settings', JSON.stringify(toSave));
+          } catch (error) {
+            console.warn('Failed to save settings to localStorage:', error);
+          }
+        };
+
+        const initialSettings = loadSettings();
+
+        return {
+          ...initialSettings,
+          setMusicVolume: (volume: number) => {
+            const clampedVolume = Math.max(0, Math.min(1, volume));
+            const newSettings = { ...get(), musicVolume: clampedVolume };
+            set(newSettings);
+            saveSettings(newSettings);
+          },
+          setSfxVolume: (volume: number) => {
+            const clampedVolume = Math.max(0, Math.min(1, volume));
+            const newSettings = { ...get(), sfxVolume: clampedVolume };
+            set(newSettings);
+            saveSettings(newSettings);
+          },
+          setAssistantEnabled: (enabled: boolean) => {
+            const newSettings = { ...get(), assistantEnabled: enabled };
+            set(newSettings);
+            saveSettings(newSettings);
+          },
+          reset: () => {
+            set(DEFAULT_SETTINGS);
+            saveSettings(DEFAULT_SETTINGS);
+          },
+        };
+      })
+    );
+
     const { setMusicVolume, setSfxVolume, setAssistantEnabled } = store1.getState();
 
     setMusicVolume(0.7);
     setSfxVolume(0.4);
     setAssistantEnabled(true);
 
-    // Create new store instance (simulating page reload)
-    const store2 = createTestStore();
+    // Create new store instance (simulating page reload) with same localStorage
+    const store2 = create<SettingsState>()(
+      subscribeWithSelector((set, get) => {
+        const loadSettings = () => {
+          try {
+            const stored = localStorage.getItem('tetris-settings');
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              return { ...DEFAULT_SETTINGS, ...parsed };
+            }
+          } catch (error) {
+            console.warn('Failed to load settings from localStorage:', error);
+          }
+          return DEFAULT_SETTINGS;
+        };
+
+        const saveSettings = (settings: Partial<SettingsState>) => {
+          try {
+            const current = get();
+            const toSave = {
+              musicVolume: current.musicVolume,
+              sfxVolume: current.sfxVolume,
+              assistantEnabled: current.assistantEnabled,
+              ...settings,
+            };
+            localStorage.setItem('tetris-settings', JSON.stringify(toSave));
+          } catch (error) {
+            console.warn('Failed to save settings to localStorage:', error);
+          }
+        };
+
+        const initialSettings = loadSettings();
+
+        return {
+          ...initialSettings,
+          setMusicVolume: (volume: number) => {
+            const clampedVolume = Math.max(0, Math.min(1, volume));
+            const newSettings = { ...get(), musicVolume: clampedVolume };
+            set(newSettings);
+            saveSettings(newSettings);
+          },
+          setSfxVolume: (volume: number) => {
+            const clampedVolume = Math.max(0, Math.min(1, volume));
+            const newSettings = { ...get(), sfxVolume: clampedVolume };
+            set(newSettings);
+            saveSettings(newSettings);
+          },
+          setAssistantEnabled: (enabled: boolean) => {
+            const newSettings = { ...get(), assistantEnabled: enabled };
+            set(newSettings);
+            saveSettings(newSettings);
+          },
+          reset: () => {
+            set(DEFAULT_SETTINGS);
+            saveSettings(DEFAULT_SETTINGS);
+          },
+        };
+      })
+    );
+
     const state2 = store2.getState();
 
     expect(state2.musicVolume).toBe(0.7);

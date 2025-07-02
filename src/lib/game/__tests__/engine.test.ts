@@ -298,9 +298,9 @@ describe('Game Engine - Drop Action', () => {
 
   test('should update score based on lines cleared', () => {
     const board = createEmptyBoard();
-    // Create multiple complete lines
+    // Create two complete lines at bottom that will be cleared
     for (let y = 18; y < 20; y++) {
-      for (let x = 0; x < 9; x++) {
+      for (let x = 0; x < 10; x++) {
         board[y][x] = 'O';
       }
     }
@@ -308,7 +308,7 @@ describe('Game Engine - Drop Action', () => {
     const state = createTestState({
       board,
       current: createTetromino('I'),
-      position: { x: 6, y: 0 },
+      position: { x: 3, y: 0 },
       level: 1,
     });
 
@@ -320,14 +320,10 @@ describe('Game Engine - Drop Action', () => {
   });
 
   test('should increase level based on lines cleared', () => {
-    const state = createTestState({
-      lines: 9, // Almost to next level
-    });
-
-    // Mock clearLines to return 2 lines cleared
+    // Create two complete lines at bottom that will be cleared
     const board = createEmptyBoard();
     for (let y = 18; y < 20; y++) {
-      for (let x = 0; x < 9; x++) {
+      for (let x = 0; x < 10; x++) {
         board[y][x] = 'O';
       }
     }
@@ -335,8 +331,8 @@ describe('Game Engine - Drop Action', () => {
     const testState = createTestState({
       board,
       current: createTetromino('I'),
-      position: { x: 6, y: 0 },
-      lines: 9,
+      position: { x: 3, y: 0 },
+      lines: 9, // Almost to next level
       level: 1,
     });
 
@@ -348,10 +344,14 @@ describe('Game Engine - Drop Action', () => {
   });
 
   test('should trigger game over when new piece collides', () => {
-    // Fill top area of board
+    // Fill top area of board with incomplete lines (so they won't be cleared)
     const board = createEmptyBoard();
-    for (let x = 0; x < 10; x++) {
+    // Fill row 0 completely except one cell to prevent line clearing
+    for (let x = 0; x < 9; x++) {
       board[0][x] = 'O';
+    }
+    // Fill row 1 completely except one cell to prevent line clearing
+    for (let x = 1; x < 10; x++) {
       board[1][x] = 'O';
     }
 
@@ -449,14 +449,15 @@ describe('Game Engine - Game Over Handling', () => {
 describe('Game Engine - Scoring System', () => {
   test('should calculate correct score for single line clear', () => {
     const board = createEmptyBoard();
-    for (let x = 0; x < 9; x++) {
+    // Create one complete line at bottom that will be cleared
+    for (let x = 0; x < 10; x++) {
       board[19][x] = 'O';
     }
 
     const state = createTestState({
       board,
       current: createTetromino('I'),
-      position: { x: 6, y: 0 },
+      position: { x: 3, y: 0 },
       level: 1,
       score: 0,
     });
@@ -469,8 +470,9 @@ describe('Game Engine - Scoring System', () => {
 
   test('should calculate correct score for tetris (4 lines)', () => {
     const board = createEmptyBoard();
+    // Create 4 complete lines at bottom that will be cleared
     for (let y = 16; y < 20; y++) {
-      for (let x = 0; x < 9; x++) {
+      for (let x = 0; x < 10; x++) {
         board[y][x] = 'O';
       }
     }
@@ -478,7 +480,7 @@ describe('Game Engine - Scoring System', () => {
     const state = createTestState({
       board,
       current: createTetromino('I'),
-      position: { x: 6, y: 0 },
+      position: { x: 3, y: 0 },
       level: 2,
       score: 0,
     });
@@ -491,14 +493,15 @@ describe('Game Engine - Scoring System', () => {
 
   test('should multiply score by level', () => {
     const board = createEmptyBoard();
-    for (let x = 0; x < 9; x++) {
+    // Create one complete line at bottom that will be cleared
+    for (let x = 0; x < 10; x++) {
       board[19][x] = 'O';
     }
 
     const state = createTestState({
       board,
       current: createTetromino('I'),
-      position: { x: 6, y: 0 },
+      position: { x: 3, y: 0 },
       level: 5,
       score: 100,
     });

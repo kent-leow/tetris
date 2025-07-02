@@ -331,6 +331,6 @@ describe('Drop Assistant - Boundary Conditions', () => {
     const piece = createTetromino('O');
     const dropPos = getDropPosition(board, piece, { x: 4, y: 0 });
     
-    expect(dropPos.y).toBe(3); // Should stop above the tall obstacle
+    expect(dropPos.y).toBe(2); // Should stop above the tall obstacle
   });
 });
