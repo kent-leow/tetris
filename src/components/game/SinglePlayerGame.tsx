@@ -6,6 +6,9 @@ import { BG_MUSIC_VOLUME } from '../../lib/audio/constants';
 import { GameOverOverlay } from './GameOverOverlay';
 import { gameReducer, initGameState, GameState, GameAction } from '@/lib/game/engine';
 import { submitLeaderboardEntry } from '@/lib/highscore/submitLeaderboardEntry';
+import { useRouter } from 'next/navigation';
+import RetroGameOverlay from './RetroGameOverlay';
+import RetroGameHUD from './RetroGameHUD';
 
 /**
  * SinglePlayerGame
@@ -16,9 +19,6 @@ import { submitLeaderboardEntry } from '@/lib/highscore/submitLeaderboardEntry';
 
 const BOARD_ROWS = 20;
 const BOARD_COLS = 10;
-
-
-import { useRouter } from 'next/navigation';
 
 const SinglePlayerGame: React.FC = () => {
   const [state, dispatch] = React.useReducer(gameReducer, undefined, initGameState);
@@ -208,6 +208,12 @@ const SinglePlayerGame: React.FC = () => {
     setGameStarted(true); // Ensure game is started after restart
   };
 
+  const handlePlayAgain = () => {
+    setShowOverlay(false);
+    dispatch({ type: 'restart' });
+    setGameStarted(true);
+  };
+
   const handleStartGame = () => {
     setGameStarted(true);
     dispatch({ type: 'restart' }); // Reset game state to ensure clean start
@@ -243,7 +249,7 @@ const SinglePlayerGame: React.FC = () => {
     prevStateRef.current = state;
   }, [state.board, state.position.y, state.over, state.lines, playDrop, playVanish]);
 
-  // Board rendering
+  // Board rendering with retro styling
   const renderBoard = () => {
     // Merge current tetromino into board for display
     const display: (string | null)[][] = state.board.map((row: (string | null)[]) => [...row]);
@@ -260,47 +266,62 @@ const SinglePlayerGame: React.FC = () => {
       }
     }
     return (
-      <div className={`grid grid-rows-20 grid-cols-10 gap-[1px] bg-gray-700 rounded overflow-hidden border-2 border-blue-400${vibrate ? ' vibrate' : ''}`}
-        style={{ width: 320, height: 640 }}
+      <div 
+        className={`grid grid-rows-20 grid-cols-10 gap-[1px] border-2 border-cyan-400 overflow-hidden backdrop-blur-sm ${vibrate ? 'animate-pulse' : ''}`}
+        style={{ 
+          width: 320, 
+          height: 640,
+          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(15, 15, 35, 0.9) 100%)',
+          boxShadow: '0 0 30px rgba(34, 211, 238, 0.4), inset 0 0 20px rgba(34, 211, 238, 0.1)',
+        }}
         aria-label="Tetris board"
         role="grid"
       >
         {display.flat().map((cell, i) => (
           <div
             key={i}
-            className={`w-8 h-8 flex items-center justify-center text-xs font-bold
-              ${cell ? `tetromino-${cell}` : 'bg-gray-900'}
-              border border-gray-800`}
+            className={`w-8 h-8 flex items-center justify-center text-xs font-bold border border-gray-700 ${
+              cell ? `tetromino-${cell}` : 'bg-black bg-opacity-50'
+            }`}
+            style={cell ? {
+              boxShadow: '0 0 5px currentColor',
+              textShadow: '0 0 3px currentColor',
+            } : {}}
             role="gridcell"
             aria-label={cell ? cell : 'empty'}
-          >
-            {/* Optionally: cell */}
-          </div>
+          />
         ))}
       </div>
     );
   };
 
-  // Next piece preview
+  // Next piece preview with retro styling
   const renderNext = () => {
     const { next } = state;
     return (
-      <div className="flex flex-col items-center">
-        <div className="text-sm mb-1">Next</div>
-        <div className="grid grid-rows-4 grid-cols-4 gap-[1px] bg-gray-700 rounded">
-          {next.shape.flat().map((cell: number, i: number) => (
-            <div
-              key={i}
-              className={`w-5 h-5 ${cell ? `tetromino-${next.type}` : 'bg-gray-900'} border border-gray-800`}
-            />
-          ))}
-        </div>
+      <div 
+        className="grid grid-rows-4 grid-cols-4 gap-[1px] border border-purple-400 bg-black bg-opacity-50 p-2"
+        style={{
+          boxShadow: '0 0 10px rgba(168, 85, 247, 0.3)',
+        }}
+      >
+        {next.shape.flat().map((cell: number, i: number) => (
+          <div
+            key={i}
+            className={`w-5 h-5 border border-gray-700 ${
+              cell ? `tetromino-${next.type}` : 'bg-black bg-opacity-30'
+            }`}
+            style={cell ? {
+              boxShadow: '0 0 3px currentColor',
+            } : {}}
+          />
+        ))}
       </div>
     );
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center">
+    <div className="relative w-full min-h-screen flex flex-col items-center justify-center p-4">
       {/* Background music audio element */}
       <audio
         ref={audioRef}
@@ -316,94 +337,107 @@ const SinglePlayerGame: React.FC = () => {
         style={{ display: 'none' }}
         aria-label="Game over sound"
       />
-      {/* Mute button at top right */}
-      <button
-        onClick={handleMuteToggle}
-        aria-label={muted ? "Unmute background music" : "Mute background music"}
-        className="fixed top-4 right-4 z-50 bg-blue-800 bg-opacity-80 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 transition"
-        tabIndex={0}
-      >
-        {muted ? (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l6 6m0-6l-6 6M9 5v14l-5-5H2V9h2l5-5zm7.5 7.5a5.5 5.5 0 00-7.78-7.78" />
-          </svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5v14l-5-5H2V9h2l5-5zm7.5 7.5a5.5 5.5 0 00-7.78-7.78" />
-          </svg>
-        )}
-      </button>
-      {/* Back to Main Menu button, always visible */}
-      <button
-        className="absolute top-4 left-4 z-40 px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 text-base font-semibold"
-        onClick={handleBackToMenu}
-        tabIndex={0}
-        aria-label="Back to Main Menu"
-      >
-        ← Main Menu
-      </button>
 
-      {/* Game Start Overlay - displayed when game hasn't started */}
+      {/* Game Start Overlay */}
       {!gameStarted && (
-        <div className="fixed inset-0 bg-gray-950 bg-opacity-95 flex items-center justify-center z-30">
-          <div className="bg-white rounded-lg p-8 shadow-2xl text-center max-w-md mx-4 game-start-overlay">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Single Player Tetris</h2>
-            <p className="text-gray-600 mb-6">
-              Get ready to play! Use arrow keys to move, up arrow or X to rotate, and spacebar for hard drop.
-            </p>
-            <button
-              onClick={handleStartGame}
-              className="px-8 py-4 bg-blue-600 text-white text-xl font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 game-start-button"
-              autoFocus
-            >
-              🎮 Start Game
-            </button>
-            <div className="mt-4 text-sm text-gray-500">
-              <p><strong>Controls:</strong></p>
-              <p>← → ↓ Move • ↑ or X: Rotate • Space: Drop • R: Restart</p>
-            </div>
+        <RetroGameOverlay
+          title="Single Player"
+          subtitle="Classic Tetris Experience"
+          onPrimaryAction={handleStartGame}
+          primaryActionText="🎮 Start Game"
+          onSecondaryAction={handleBackToMenu}
+          secondaryActionText="← Main Menu"
+          controls={[
+            { key: "← → ↓", action: "Move" },
+            { key: "↑ or X", action: "Rotate" },
+            { key: "Space", action: "Hard Drop" },
+            { key: "R", action: "Restart" },
+          ]}
+        />
+      )}
+
+      {/* Main Game Interface */}
+      {gameStarted && (
+        <div className="flex flex-row gap-8 items-start justify-center w-full max-w-6xl">
+          {/* Game Board */}
+          <div className="flex-shrink-0">
+            {renderBoard()}
+          </div>
+          
+          {/* HUD Panel */}
+          <div className="flex-shrink-0 min-w-[240px]">
+            <RetroGameHUD
+              score={state.score}
+              level={state.level}
+              lines={state.lines}
+              nextPiece={renderNext()}
+              onRestart={handleRestart}
+              onMainMenu={handleBackToMenu}
+              onMuteToggle={handleMuteToggle}
+              muted={muted}
+              gameStarted={gameStarted}
+            />
           </div>
         </div>
       )}
 
-      <div className="flex flex-row gap-8 items-start mt-8">
-        {renderBoard()}
-        <div className="flex flex-col gap-4 ml-4">
-          {renderNext()}
-          <div className="mt-4 text-lg font-bold">Score: <span className="font-mono">{state.score}</span></div>
-          <div className="text-md">Level: {state.level}</div>
-          <div className="text-md">Lines: {state.lines}</div>
-          <button
-            className="mt-8 px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={handleRestart}
-            disabled={!gameStarted}
-            aria-label="Restart game"
-          >
-            Restart (R)
-          </button>
-        </div>
-      </div>
+      {/* Game Over Overlay */}
       {showOverlay && (
         <GameOverOverlay
           score={lastScore}
           onSubmit={handleSubmitScore}
           onMainMenu={handleBackToMenu}
+          onPlayAgain={handlePlayAgain}
         />
       )}
+
+      {/* Submitting Score Overlay */}
       {submitting && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white dark:bg-gray-900 rounded p-4 shadow text-lg">Submitting score...</div>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+          <div 
+            className="bg-gray-900 border-2 border-cyan-400 p-6 shadow-2xl backdrop-blur-sm"
+            style={{
+              boxShadow: '0 0 30px rgba(34, 211, 238, 0.5)',
+            }}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+              <span className="text-cyan-400 font-mono text-lg">Submitting score...</span>
+            </div>
+          </div>
         </div>
       )}
-      {/* Tetromino color styles */}
+
+      {/* Enhanced Tetromino color styles with glow effects */}
       <style jsx global>{`
-        .tetromino-I { background: #06b6d4; }
-        .tetromino-O { background: #fde047; }
-        .tetromino-T { background: #a78bfa; }
-        .tetromino-S { background: #4ade80; }
-        .tetromino-Z { background: #f87171; }
-        .tetromino-J { background: #60a5fa; }
-        .tetromino-L { background: #fbbf24; }
+        .tetromino-I { 
+          background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+          color: #06b6d4;
+        }
+        .tetromino-O { 
+          background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+          color: #fde047;
+        }
+        .tetromino-T { 
+          background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+          color: #a78bfa;
+        }
+        .tetromino-S { 
+          background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+          color: #4ade80;
+        }
+        .tetromino-Z { 
+          background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+          color: #f87171;
+        }
+        .tetromino-J { 
+          background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+          color: #60a5fa;
+        }
+        .tetromino-L { 
+          background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+          color: #fbbf24;
+        }
       `}</style>
     </div>
   );

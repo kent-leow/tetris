@@ -12,6 +12,10 @@ import {
 } from '../../lib/game/twoPlayerEngine';
 import { Tetromino } from '../../lib/game/types';
 import NextTetrominoPreview from './NextTetrominoPreview';
+import { useRouter } from 'next/navigation';
+import RetroGameOverlay from './RetroGameOverlay';
+import RetroText from '../menu/RetroText';
+import RetroButton from '../menu/RetroButton';
 
 /**
  * TwoPlayerGame component (full logic)
@@ -25,9 +29,6 @@ const PLAYER_KEYS = [
   { left: 'a', right: 'd', down: 's', rotate: 'w', drop: ' ' }, // Player 1
   { left: 'ArrowLeft', right: 'ArrowRight', down: 'ArrowDown', rotate: 'ArrowUp', drop: 'Enter' }, // Player 2
 ];
-
-import { useRouter } from 'next/navigation';
-
 
 const TwoPlayerGame: React.FC = () => {
   const [state, dispatch] = useReducer(twoPlayerGameReducer, undefined, initTwoPlayerGameState);

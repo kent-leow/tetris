@@ -1,14 +1,15 @@
 import React from 'react';
 import TwoPlayerGame from '../../components/game/TwoPlayerGame';
+import RetroGameLayout from '../../components/game/RetroGameLayout';
 
 /**
- * Double Player Game Page
+ * Double Player Game Page with retro styling
  * Renders the two-player Tetris game.
  */
 const DoublePlayerPage = () => (
-  <main className="flex min-h-screen flex-col items-center justify-center bg-gray-950">
+  <RetroGameLayout title="Two Player">
     <TwoPlayerGame />
-  </main>
+  </RetroGameLayout>
 );
 
 export default DoublePlayerPage;

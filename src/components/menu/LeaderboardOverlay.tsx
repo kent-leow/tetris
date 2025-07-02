@@ -1,16 +1,17 @@
 /**
  * LeaderboardOverlay
- * Displays the top scores in a modal overlay.
+ * Displays the top scores in a modal overlay with retro styling.
  * Accessible, paginated, and updates in real time (if online).
  */
 import React, { useEffect, useRef } from 'react';
+import RetroText from './RetroText';
+import RetroButton from './RetroButton';
 
 export interface LeaderboardEntry {
   rank: number;
   name: string;
   score: number;
 }
-
 
 export interface LeaderboardOverlayProps {
   open: boolean;
@@ -20,7 +21,13 @@ export interface LeaderboardOverlayProps {
   onRefresh?: () => void;
 }
 
-const LeaderboardOverlay: React.FC<LeaderboardOverlayProps> = ({ open, onClose, entries, loading, onRefresh }) => {
+const LeaderboardOverlay: React.FC<LeaderboardOverlayProps> = ({ 
+  open, 
+  onClose, 
+  entries, 
+  loading, 
+  onRefresh 
+}) => {
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,51 +40,181 @@ const LeaderboardOverlay: React.FC<LeaderboardOverlayProps> = ({ open, onClose, 
 
   return (
     <div
-      ref={dialogRef}
-      tabIndex={-1}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Leaderboard"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
-      onKeyDown={e => {
-        if (e.key === 'Escape') onClose();
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{
+        background: `
+          radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%),
+          linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(25, 25, 112, 0.1) 100%)
+        `,
       }}
     >
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md outline-none">
-        <h2 className="text-2xl font-bold mb-4 text-center text-blue-800">Leaderboard</h2>
+      <div
+        ref={dialogRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Leaderboard"
+        className="bg-gray-900 border-2 border-cyan-400 shadow-2xl p-6 w-full max-w-md mx-4 outline-none backdrop-blur-sm"
+        style={{
+          background: `
+            linear-gradient(135deg, rgba(15, 15, 35, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%)
+          `,
+          boxShadow: `
+            0 0 30px rgba(34, 211, 238, 0.5),
+            inset 0 0 20px rgba(34, 211, 238, 0.1)
+          `,
+        }}
+        onKeyDown={e => {
+          if (e.key === 'Escape') onClose();
+        }}
+      >
+        {/* Header */}
+        <div className="text-center mb-6">
+          <RetroText size="2xl" variant="primary" glow scanlines>
+            Leaderboard
+          </RetroText>
+          <div
+            className="mt-2 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+          />
+        </div>
+
+        {/* Refresh Button */}
         {onRefresh && (
-          <button
-            className="mb-4 w-full py-2 px-4 rounded bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            onClick={onRefresh}
-            aria-label="Refresh leaderboard"
-          >
-            Refresh
-          </button>
+          <div className="mb-4">
+            <RetroButton
+              onClick={onRefresh}
+              variant="secondary"
+              size="sm"
+              className="w-full"
+              aria-label="Refresh leaderboard"
+            >
+              ⟳ Refresh
+            </RetroButton>
+          </div>
         )}
-        <div className="overflow-y-auto max-h-80" aria-live="polite" aria-atomic="true">
+
+        {/* Leaderboard Content */}
+        <div 
+          className="overflow-y-auto max-h-80 bg-black bg-opacity-30 border border-cyan-400 p-4 rounded-none"
+          style={{
+            boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)',
+          }}
+          aria-live="polite" 
+          aria-atomic="true"
+        >
           {loading ? (
-            <div className="text-center text-gray-500">Loading...</div>
+            <div className="text-center py-8">
+              <RetroText size="md" variant="secondary" glow={false}>
+                Loading...
+              </RetroText>
+              <div className="mt-2">
+                <div 
+                  className="inline-block w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"
+                />
+              </div>
+            </div>
           ) : entries.length === 0 ? (
-            <div className="text-center text-gray-500">No scores yet.</div>
+            <div className="text-center py-8">
+              <RetroText size="md" variant="accent" glow={false}>
+                No scores yet.
+              </RetroText>
+              <RetroText size="sm" variant="secondary" glow={false} className="mt-2 opacity-70">
+                Be the first to set a record!
+              </RetroText>
+            </div>
           ) : (
-            <ol className="space-y-2">
-              {entries.map(entry => (
-                <li key={entry.rank} className="flex items-center px-2 py-1 rounded hover:bg-blue-50">
-                  <span className="font-mono text-lg text-blue-700 w-12 text-left">#{entry.rank}</span>
-                  <span className="flex-1 text-center truncate text-blue-700 font-semibold mx-2">{entry.name}</span>
-                  <span className="font-bold text-blue-700 w-20 text-right">{entry.score.toLocaleString()}</span>
-                </li>
+            <div className="space-y-2">
+              {entries.map((entry, index) => (
+                <div 
+                  key={entry.rank} 
+                  className="flex items-center p-2 border border-gray-600 bg-black bg-opacity-20 hover:bg-opacity-40 transition-all duration-200"
+                  style={{
+                    background: index < 3 
+                      ? `linear-gradient(90deg, 
+                          ${index === 0 ? 'rgba(255, 215, 0, 0.1)' : 
+                            index === 1 ? 'rgba(192, 192, 192, 0.1)' : 
+                            'rgba(205, 127, 50, 0.1)'} 0%, 
+                          transparent 100%)`
+                      : 'rgba(0, 0, 0, 0.2)',
+                  }}
+                >
+                  {/* Rank */}
+                  <div className="w-12 text-left">
+                    <RetroText 
+                      size="md" 
+                      variant={index < 3 ? 'accent' : 'primary'} 
+                      glow={index < 3}
+                      className="font-mono"
+                    >
+                      #{entry.rank}
+                    </RetroText>
+                  </div>
+                  
+                  {/* Medal for top 3 */}
+                  {index < 3 && (
+                    <div className="w-8 text-center">
+                      <span className="text-lg">
+                        {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Name */}
+                  <div className="flex-1 text-center mx-2">
+                    <RetroText 
+                      size="md" 
+                      variant={index < 3 ? 'accent' : 'secondary'} 
+                      glow={false}
+                      className="truncate"
+                    >
+                      {entry.name}
+                    </RetroText>
+                  </div>
+                  
+                  {/* Score */}
+                  <div className="w-24 text-right">
+                    <RetroText 
+                      size="md" 
+                      variant={index < 3 ? 'accent' : 'primary'} 
+                      glow={index < 3}
+                      className="font-mono"
+                    >
+                      {entry.score.toLocaleString()}
+                    </RetroText>
+                  </div>
+                </div>
               ))}
-            </ol>
+            </div>
           )}
         </div>
-        <button
-          className="mt-6 w-full py-2 px-4 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          onClick={onClose}
-          aria-label="Back to main menu"
-        >
-          Back
-        </button>
+
+        {/* Back Button */}
+        <div className="mt-6">
+          <RetroButton
+            onClick={onClose}
+            variant="primary"
+            size="md"
+            className="w-full"
+            aria-label="Back to main menu"
+            autoFocus
+          >
+            ← Back
+          </RetroButton>
+        </div>
+
+        {/* Decorative scanlines */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-5"
+          style={{
+            background: `repeating-linear-gradient(
+              0deg,
+              transparent,
+              transparent 2px,
+              rgba(34, 211, 238, 0.3) 2px,
+              rgba(34, 211, 238, 0.3) 4px
+            )`,
+          }}
+        />
       </div>
     </div>
   );

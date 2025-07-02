@@ -1,12 +1,12 @@
 'use client';
 
 import SinglePlayerGame from '@/components/game/SinglePlayerGame';
+import RetroGameLayout from '@/components/game/RetroGameLayout';
 
 export default function SinglePlayerPage() {
-  return <SinglePlayerGame onMainMenu={() => {
-    // Use router to go back to main menu
-    if (typeof window !== 'undefined') {
-      window.location.href = '/';
-    }
-  }} />;
+  return (
+    <RetroGameLayout title="Single Player">
+      <SinglePlayerGame />
+    </RetroGameLayout>
+  );
 }

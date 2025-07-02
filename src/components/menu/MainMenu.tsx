@@ -5,9 +5,11 @@ import { useAudioStore } from '../../lib/audio/store';
 import { BG_MUSIC_VOLUME } from '../../lib/audio/constants';
 import { useRouter } from 'next/navigation';
 import GameModeMenu, { GameMode } from "./GameModeMenu";
-// import { useHighscore } from '../../lib/highscore/useHighscore';
 import LeaderboardOverlay from './LeaderboardOverlay';
 import { useLeaderboard } from '../../lib/highscore/useLeaderboard';
+import AnimatedBackground from './AnimatedBackground';
+import RetroText from './RetroText';
+import RetroButton from './RetroButton';
 
 /**
  * MainMenu component displays the main menu for the Tetris game.
@@ -106,17 +108,9 @@ const MainMenu: React.FC = () => {
 
   return (
     <>
-      {/* Winner message should be rendered at the top of the page, not inside MainMenu. If you want a global winner message, render it here as a fixed/absolute element. */}
-      {/* Example: */}
-      {/*
-      {winner && (
-        <div className="fixed top-0 left-0 w-full z-50 flex justify-center mt-4 pointer-events-none">
-          <div className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg text-2xl font-bold">
-            {winner}
-          </div>
-        </div>
-      )}
-      */}
+      {/* Animated retro background */}
+      <AnimatedBackground />
+      
       {/* Background music audio element */}
       <audio
         ref={audioRef}
@@ -125,12 +119,17 @@ const MainMenu: React.FC = () => {
         style={{ display: 'none' }}
         aria-label="Main menu background music"
       />
+      
       {/* Mute button at top right */}
       <button
         onClick={handleMuteToggle}
         aria-label={muted ? "Unmute background music" : "Mute background music"}
-        className="fixed top-4 right-4 z-50 bg-blue-800 bg-opacity-80 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 transition"
+        className="fixed top-4 right-4 z-50 bg-gray-900 bg-opacity-80 hover:bg-gray-700 text-cyan-400 rounded-none border-2 border-cyan-400 p-3 shadow-lg focus:outline-none focus:ring-2 focus:ring-cyan-300 transition-all duration-200 hover:shadow-cyan-400/50"
         tabIndex={0}
+        style={{
+          boxShadow: '0 0 10px rgba(34, 211, 238, 0.5)',
+          textShadow: '0 0 5px currentColor',
+        }}
       >
         {muted ? (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -142,73 +141,100 @@ const MainMenu: React.FC = () => {
           </svg>
         )}
       </button>
+      
       <nav
         aria-label="Main Menu"
-        className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-900 to-blue-700 text-white px-4"
+        className="relative flex flex-col items-center justify-center min-h-screen text-white px-4 z-10"
       >
-        <h1 className="text-4xl font-bold mb-8 focus:outline-none" tabIndex={-1}>
-          Tetris
-        </h1>
-        {/* Highscore Display (from DB) */}
+        {/* Main title with retro styling */}
+        <div className="mb-12 text-center">
+          <RetroText size="4xl" variant="primary" glow scanlines className="mb-2">
+            Tetris
+          </RetroText>
+          <RetroText size="sm" variant="secondary" glow={false} className="opacity-80">
+            Classic Arcade Experience
+          </RetroText>
+        </div>
+
+        {/* Highscore Display with retro styling */}
         <div
-          className="mb-4 w-full max-w-xs flex items-center justify-center"
+          className="mb-8 w-full max-w-md flex items-center justify-center bg-gray-900 bg-opacity-50 border-2 border-yellow-400 p-4 backdrop-blur-sm"
           aria-live="polite"
           aria-atomic="true"
+          style={{
+            boxShadow: '0 0 15px rgba(251, 191, 36, 0.3)',
+          }}
         >
-          <span className="text-lg font-semibold" id="highscore-label">
+          <RetroText size="lg" variant="accent" className="mr-3">
             Highscore:
-          </span>
-          <span
-            className="ml-2 text-2xl font-bold text-yellow-300"
+          </RetroText>
+          <RetroText
+            size="xl"
+            variant="accent"
+            glow
             aria-labelledby="highscore-label"
           >
             {leaderboardLoading
               ? '...'
               : entries.length > 0
                 ? entries[0].score.toLocaleString()
-                : 'No highscore yet'}
-          </span>
+                : '0'}
+          </RetroText>
         </div>
-        <div className="mb-8 w-full max-w-xs">
+
+        {/* Game mode selection */}
+        <div className="mb-8 w-full max-w-md">
           <GameModeMenu onSelectMode={handleSelectMode} selectedMode={selectedMode} />
         </div>
-        <ul className="w-full max-w-xs space-y-4" role="menu">
-          <li>
-            <button
-              className="w-full py-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-500 focus:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 transition text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-              role="menuitem"
-              tabIndex={0}
-              autoFocus
-              onClick={handleStartGame}
-              disabled={!selectedMode}
-              aria-disabled={!selectedMode}
-            >
-              {selectedMode ? `Start ${selectedMode === 'single' ? 'Single Player' : 'Two Player'} Game` : 'Start Game'}
-            </button>
-          </li>
-          <li>
-            <button
-              className="w-full py-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-500 focus:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 transition text-lg font-semibold"
-              role="menuitem"
-              tabIndex={0}
-              onClick={handleShowLeaderboard}
-              aria-haspopup="dialog"
-              aria-expanded={showLeaderboard}
-            >
-              Leaderboard
-            </button>
-          </li>
-          <li>
-            <button
-              className="w-full py-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-500 focus:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 transition text-lg font-semibold"
-              role="menuitem"
-              tabIndex={0}
-            >
-              Settings
-            </button>
-          </li>
-        </ul>
+
+        {/* Menu buttons */}
+        <div className="w-full max-w-md space-y-4" role="menu">
+          <RetroButton
+            onClick={handleStartGame}
+            disabled={!selectedMode}
+            variant="primary"
+            size="lg"
+            className="w-full"
+            role="menuitem"
+            tabIndex={0}
+            autoFocus
+            aria-disabled={!selectedMode}
+          >
+            {selectedMode ? `Start ${selectedMode === 'single' ? 'Single Player' : 'Two Player'} Game` : 'Start Game'}
+          </RetroButton>
+
+          <RetroButton
+            onClick={handleShowLeaderboard}
+            variant="secondary"
+            size="lg"
+            className="w-full"
+            role="menuitem"
+            tabIndex={0}
+            aria-haspopup="dialog"
+            aria-expanded={showLeaderboard}
+          >
+            Leaderboard
+          </RetroButton>
+
+          <RetroButton
+            variant="accent"
+            size="lg"
+            className="w-full"
+            role="menuitem"
+            tabIndex={0}
+          >
+            Settings
+          </RetroButton>
+        </div>
+
+        {/* Retro decorative elements */}
+        <div className="mt-12 text-center">
+          <RetroText size="sm" variant="primary" glow={false} className="opacity-60">
+            Use arrow keys to navigate • Enter to select
+          </RetroText>
+        </div>
       </nav>
+      
       <LeaderboardOverlay
         open={showLeaderboard}
         onClose={handleCloseLeaderboard}
