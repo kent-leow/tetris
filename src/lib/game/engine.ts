@@ -4,7 +4,7 @@
  * Strictly typed, functional, and testable.
  */
 
-import { Tetromino, TetrominoType, getRandomTetromino, rotateTetromino, Board, Point, createEmptyBoard, placeTetromino, checkCollision, clearLines, getDropPosition } from './types';
+import { Tetromino, getRandomTetromino, rotateTetromino, Board, Point, createEmptyBoard, placeTetromino, checkCollision, clearLines, getDropPosition } from './types';
 
 export interface GameState {
   board: Board;
@@ -19,7 +19,10 @@ export interface GameState {
 
 export interface GameAction {
   type: 'move' | 'rotate' | 'drop' | 'tick' | 'restart';
-  payload?: any;
+  payload?: {
+    dx?: number;
+    dy?: number;
+  };
 }
 
 /**
@@ -49,7 +52,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
   switch (action.type) {
     case 'move': {
-      const { dx, dy } = action.payload || { dx: 0, dy: 0 };
+      const { dx = 0, dy = 0 } = action.payload || {};
       const newPos = { x: state.position.x + dx, y: state.position.y + dy };
       if (!checkCollision(state.board, state.current, newPos)) {
         return { ...state, position: newPos };

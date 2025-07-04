@@ -7,10 +7,8 @@ import { useSettingsStore } from '../../lib/settings/store';
 import {
   twoPlayerGameReducer,
   initTwoPlayerGameState,
-  TwoPlayerGameState,
-  TwoPlayerAction,
 } from '../../lib/game/twoPlayerEngine';
-import { Tetromino, getDropPosition } from '../../lib/game/types';
+import { Tetromino, getDropPosition, PlayerState } from '../../lib/game/types';
 import NextTetrominoPreview from './NextTetrominoPreview';
 import { useRouter } from 'next/navigation';
 import RetroGameOverlay from './RetroGameOverlay';
@@ -24,8 +22,6 @@ import { useNoScroll } from '../../lib/game/useNoScroll';
  * Renders two Tetris boards side by side for local competitive play.
  * Features retro aesthetics matching the main menu and single-player mode.
  */
-const BOARD_WIDTH = 10;
-const BOARD_HEIGHT = 20;
 
 const PLAYER_KEYS = [
   { left: 'a', right: 'd', down: 's', rotate: 'w', drop: ' ' }, // Player 1
@@ -38,9 +34,6 @@ const TwoPlayerGame: React.FC = () => {
   const muted = useAudioStore((s) => s.muted);
   const toggleMuted = useAudioStore((s) => s.toggleMuted);
   const getMusicVolume = useAudioStore((s) => s.getMusicVolume);
-  const playDrop = useAudioStore((s) => s.playDrop);
-  const playVanish = useAudioStore((s) => s.playVanish);
-  const assistantEnabled = useSettingsStore((s) => s.assistantEnabled);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const gameEndAudioRef = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
@@ -72,12 +65,13 @@ const TwoPlayerGame: React.FC = () => {
 
   // Cleanup audio on unmount
   useEffect(() => {
+    const audioElement = audioRef.current;
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        if (audioRef.current.parentNode) {
-          audioRef.current.parentNode.removeChild(audioRef.current);
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+        if (audioElement.parentNode) {
+          audioElement.parentNode.removeChild(audioElement);
         }
       }
     };
@@ -276,7 +270,7 @@ const TwoPlayerGame: React.FC = () => {
 
 interface PlayerBoardProps {
   player: 1 | 2;
-  state: any;
+  state: PlayerState;
   opponentScore: number;
   isWinner: boolean;
 }
@@ -325,13 +319,16 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
       playVanish();
     }
     prevStateRef.current = state;
-  }, [state.board, state.position.y, state.over, state.lines, playDrop, playVanish]);
+  }, [state, playDrop, playVanish]);
   
   // Player status effects
   const isLoser = state.over && !isWinner;
   const tiltClass = isLoser ? 'rotate-3' : '';
   const opacityClass = isLoser ? 'opacity-60' : '';
-  const playerColorClasses = player === 1 ? {
+  const playerColorClasses: {
+    border: string;
+    text: 'primary' | 'secondary' | 'accent' | 'warning';
+  } = player === 1 ? {
     border: 'border-cyan-400',
     text: 'primary',
   } : {
@@ -350,7 +347,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
           boxShadow: `0 0 15px rgba(${playerColorRgb}, 0.3)`,
         }}
       >
-        <RetroText size="md" variant={playerColorClasses.text as any} glow>
+        <RetroText size="md" variant={playerColorClasses.text} glow>
           Player {player}
         </RetroText>
         {isWinner && (
@@ -372,10 +369,10 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
           boxShadow: `0 0 10px rgba(${playerColorRgb}, 0.2)`,
         }}
       >
-        <RetroText size="sm" variant={playerColorClasses.text as any} glow={false} className="mb-1">
+        <RetroText size="sm" variant={playerColorClasses.text} glow={false} className="mb-1">
           Score
         </RetroText>
-        <RetroText size="md" variant={playerColorClasses.text as any} glow className="font-mono">
+        <RetroText size="md" variant={playerColorClasses.text} glow className="font-mono">
           {state.score.toLocaleString()}
         </RetroText>
       </div>
@@ -389,23 +386,23 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
       >
         <div className="space-y-1">
           <div className="flex justify-between">
-            <RetroText size="sm" variant={playerColorClasses.text as any} glow={false}>
+            <RetroText size="sm" variant={playerColorClasses.text} glow={false}>
               Level:
             </RetroText>
-            <RetroText size="sm" variant={playerColorClasses.text as any} glow className="font-mono">
+            <RetroText size="sm" variant={playerColorClasses.text} glow className="font-mono">
               {state.level}
             </RetroText>
           </div>
           <div className="flex justify-between">
-            <RetroText size="sm" variant={playerColorClasses.text as any} glow={false}>
+            <RetroText size="sm" variant={playerColorClasses.text} glow={false}>
               Lines:
             </RetroText>
-            <RetroText size="sm" variant={playerColorClasses.text as any} glow className="font-mono">
+            <RetroText size="sm" variant={playerColorClasses.text} glow className="font-mono">
               {state.lines}
             </RetroText>
           </div>
           <div className="flex justify-between">
-            <RetroText size="sm" variant={playerColorClasses.text as any} glow={false}>
+            <RetroText size="sm" variant={playerColorClasses.text} glow={false}>
               Opp:
             </RetroText>
             <RetroText size="sm" variant="accent" glow={false} className="font-mono">
@@ -422,7 +419,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, state, opponentScore,
           boxShadow: `0 0 10px rgba(${playerColorRgb}, 0.2)`,
         }}
       >
-        <RetroText size="sm" variant={playerColorClasses.text as any} glow={false} className="mb-1 text-center">
+        <RetroText size="sm" variant={playerColorClasses.text} glow={false} className="mb-1 text-center">
           Next
         </RetroText>
         <div className="flex justify-center">
@@ -465,7 +462,7 @@ const BoardGrid: React.FC<{
   current?: Tetromino;
   position?: { x: number; y: number };
   dropPosition?: { x: number; y: number } | null;
-}> = ({ board, vibrate, assistantEnabled, current, position, dropPosition }) => {
+}> = ({ board, vibrate, assistantEnabled, current, dropPosition }) => {
   const [cellSize, setCellSize] = useState(28);
 
   useEffect(() => {

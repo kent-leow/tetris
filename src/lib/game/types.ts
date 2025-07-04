@@ -11,7 +11,7 @@ export function addGarbageLines(board: Board, lines: number): Board {
     const emptyIdx = Math.floor(Math.random() * width);
     return Array.from({ length: width }, (_, i) => (i === emptyIdx ? null : 'G'));
   };
-  let newBoard = board.slice(lines);
+  const newBoard = board.slice(lines);
   for (let i = 0; i < lines; i++) {
     newBoard.push(garbageRow());
   }

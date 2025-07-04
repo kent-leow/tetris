@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { BG_MUSIC_VOLUME, SFX_VOLUME } from './constants';
 import { useSettingsStore } from '../settings/store';
 
 interface AudioStore {

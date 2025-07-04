@@ -33,7 +33,7 @@ async function getClient(): Promise<MongoClient> {
       // Test if connection is still alive
       await client.db('admin').command({ ping: 1 });
       return client;
-    } catch (error) {
+    } catch {
       console.log('Existing connection failed, creating new one');
       client = null;
       clientPromise = null;

@@ -10,7 +10,6 @@ import {
   createEmptyBoard, 
   checkCollision, 
   placeTetromino,
-  getRandomTetromino,
   rotateTetromino,
   Board,
   Tetromino,

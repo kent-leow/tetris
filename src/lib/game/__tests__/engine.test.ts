@@ -17,15 +17,9 @@ import {
 } from '../engine';
 import {
   createEmptyBoard,
-  checkCollision,
-  placeTetromino,
-  clearLines,
-  getDropPosition,
-  rotateTetromino,
   TetrominoType,
   Tetromino,
   Board,
-  Point,
 } from '../types';
 
 // Test helper to create specific tetromino shapes
@@ -556,7 +550,7 @@ describe('Game Engine - Performance', () => {
 describe('Game Engine - Edge Cases', () => {
   test('should handle invalid action types gracefully', () => {
     const state = initGameState();
-    const invalidAction = { type: 'invalid' } as any;
+    const invalidAction = { type: 'invalid' } as unknown as GameAction;
 
     const newState = gameReducer(state, invalidAction);
 

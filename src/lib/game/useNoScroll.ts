@@ -35,8 +35,6 @@ export const useNoScroll = (options: NoScrollOptions = {}) => {
     // Store original values to restore on cleanup
     const originalHtmlStyle = document.documentElement.style.cssText;
     const originalBodyStyle = document.body.style.cssText;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    const originalBodyOverflow = document.body.style.overflow;
 
     /**
      * Check if an element or its parents are in the allowed scroll list
@@ -54,7 +52,7 @@ export const useNoScroll = (options: NoScrollOptions = {}) => {
           if (element.matches(selector) || element.closest(selector)) {
             return true;
           }
-        } catch (e) {
+        } catch {
           console.warn('Invalid selector for useNoScroll:', selector);
         }
       }

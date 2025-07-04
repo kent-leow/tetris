@@ -2,7 +2,6 @@ export type { TwoPlayerGameState } from './types';
 import {
   PlayerState,
   TwoPlayerGameState,
-  GarbageEvent,
   getRandomTetromino,
   createEmptyBoard,
   checkCollision,
@@ -11,8 +10,6 @@ import {
   addGarbageLines,
   rotateTetromino,
   getDropPosition,
-  Point,
-  Tetromino,
 } from './types';
 
 /**
@@ -99,7 +96,7 @@ export function twoPlayerGameReducer(state: TwoPlayerGameState, action: TwoPlaye
       const current = getRandomTetromino();
       const position = { x: 3, y: 0 };
       const over = checkCollision(cleared, next, position);
-      let newPlayers = [...players] as [PlayerState, PlayerState];
+      const newPlayers = [...players] as [PlayerState, PlayerState];
       // Opponent level up every 5 lines cleared by this player
       const opponent = p === 0 ? 1 : 0;
       let opponentLevel = newPlayers[opponent].level;
@@ -163,7 +160,7 @@ export function twoPlayerGameReducer(state: TwoPlayerGameState, action: TwoPlaye
       const current = getRandomTetromino();
       const position = { x: 3, y: 0 };
       const over = checkCollision(cleared, next, position);
-      let newPlayers = [...players] as [PlayerState, PlayerState];
+      const newPlayers = [...players] as [PlayerState, PlayerState];
       newPlayers[p] = {
         ...player,
         board: cleared,

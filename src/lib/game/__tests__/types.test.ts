@@ -648,9 +648,10 @@ describe('Performance and Edge Cases', () => {
     
     newBoard.forEach(row => {
       row.forEach(cell => {
-        expect(cell).toSatisfy((val: BoardCell) => 
-          val === null || ['I', 'O', 'T', 'S', 'Z', 'J', 'L', 'G'].includes(val)
-        );
+        expect(cell).toSatisfy((val: unknown) => {
+          const boardCell = val as BoardCell;
+          return boardCell === null || ['I', 'O', 'T', 'S', 'Z', 'J', 'L', 'G'].includes(boardCell);
+        });
       });
     });
   });
@@ -689,10 +690,11 @@ expect.extend({
 });
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
-      toBeOneOf(expected: any[]): R;
-      toSatisfy(predicate: (value: any) => boolean): R;
+      toBeOneOf(expected: unknown[]): R;
+      toSatisfy(predicate: (value: unknown) => boolean): R;
     }
   }
 }

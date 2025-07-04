@@ -29,6 +29,19 @@ class LeaderboardAPI {
     // This would be a test-only endpoint in a real implementation
     // For now, we'll assume the database resets between test runs
   }
+
+  // Public methods for raw HTTP requests
+  async post(url: string, options?: { data?: unknown }) {
+    return await this.request.post(url, options);
+  }
+
+  async put(url: string, options?: { data?: unknown }) {
+    return await this.request.put(url, options);
+  }
+
+  async delete(url: string) {
+    return await this.request.delete(url);
+  }
 }
 
 test.describe('Leaderboard API - GET Endpoint', () => {
@@ -83,7 +96,7 @@ test.describe('Leaderboard API - GET Endpoint', () => {
     }
     
     // Rankings should be consecutive
-    data.forEach((entry, index) => {
+    data.forEach((entry: { rank: number }, index: number) => {
       expect(entry.rank).toBe(index + 1);
     });
   });
@@ -124,13 +137,13 @@ test.describe('Leaderboard API - POST Endpoint', () => {
 
   test('should validate required fields', async () => {
     // Missing name
-    const response1 = await api.request.post('/api/leaderboard', {
+    const response1 = await api.post('/api/leaderboard', {
       data: { score: 1000 }
     });
     expect(response1.status()).toBe(400);
 
     // Missing score
-    const response2 = await api.request.post('/api/leaderboard', {
+    const response2 = await api.post('/api/leaderboard', {
       data: { name: 'Player' }
     });
     expect(response2.status()).toBe(400);
@@ -142,13 +155,13 @@ test.describe('Leaderboard API - POST Endpoint', () => {
 
   test('should validate data types', async () => {
     // Invalid score type
-    const response1 = await api.request.post('/api/leaderboard', {
+    const response1 = await api.post('/api/leaderboard', {
       data: { name: 'Player', score: 'invalid' }
     });
     expect(response1.status()).toBe(400);
 
     // Invalid name type
-    const response2 = await api.request.post('/api/leaderboard', {
+    const response2 = await api.post('/api/leaderboard', {
       data: { name: 123, score: 1000 }
     });
     expect(response2.status()).toBe(400);
@@ -281,7 +294,7 @@ test.describe('Leaderboard API - Error Handling', () => {
   });
 
   test('should handle malformed JSON', async () => {
-    const response = await api.request.post('/api/leaderboard', {
+    const response = await api.post('/api/leaderboard', {
       data: 'invalid json',
       headers: {
         'content-type': 'application/json'
@@ -292,23 +305,23 @@ test.describe('Leaderboard API - Error Handling', () => {
   });
 
   test('should handle empty request body', async () => {
-    const response = await api.request.post('/api/leaderboard');
+    const response = await api.post('/api/leaderboard');
     
     expect(response.status()).toBe(400);
   });
 
   test('should handle unsupported HTTP methods', async () => {
-    const putResponse = await api.request.put('/api/leaderboard', {
+    const putResponse = await api.put('/api/leaderboard', {
       data: { name: 'Player', score: 1000 }
     });
     expect(putResponse.status()).toBe(405);
 
-    const deleteResponse = await api.request.delete('/api/leaderboard');
+    const deleteResponse = await api.delete('/api/leaderboard');
     expect(deleteResponse.status()).toBe(405);
   });
 
   test('should return appropriate error messages', async () => {
-    const response = await api.request.post('/api/leaderboard', {
+    const response = await api.post('/api/leaderboard', {
       data: { name: 'Player' } // Missing score
     });
     

@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@types/mongodb": "^4.0.6",
+    "critters": "^0.0.23",
     "mongodb": "^6.17.0",
     "next": "15.3.4",
     "react": "^19.0.0",
@@ -27,23 +28,23 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.48.0",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.6.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/jest": "^29.5.14",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
-    "tailwindcss": "^4",
-    "typescript": "^5",
-    "@playwright/test": "^1.48.0",
-    "@testing-library/jest-dom": "^6.6.0",
-    "@testing-library/react": "^16.0.0",
-    "@testing-library/user-event": "^14.5.2",
-    "@types/jest": "^29.5.14",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "tailwindcss": "^4",
     "ts-jest": "^29.2.5",
-    "@axe-core/playwright": "^4.10.0"
+    "typescript": "^5"
   }
 }

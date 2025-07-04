@@ -2,7 +2,6 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useAudioStore } from '../../lib/audio/store';
-import { useSettingsStore } from '../../lib/settings/store';
 import { useRouter } from 'next/navigation';
 import GameModeMenu, { GameMode } from "./GameModeMenu";
 import LeaderboardOverlay from './LeaderboardOverlay';
@@ -49,6 +48,15 @@ const MainMenu: React.FC = () => {
     orientation: 'vertical',
     wrap: true,
   });
+
+  const handleShowLeaderboard = useCallback(() => {
+    setShowLeaderboard(true);
+    refetchLeaderboard();
+  }, [refetchLeaderboard]);
+  
+  const handleShowSettings = useCallback(() => {
+    setShowSettings(true);
+  }, []);
 
   // Enhanced keyboard navigation
   useEffect(() => {
@@ -102,7 +110,7 @@ const MainMenu: React.FC = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showLeaderboard, showSettings, handleMenuKeyDown]);
+  }, [showLeaderboard, showSettings, handleMenuKeyDown, handleShowLeaderboard, handleShowSettings]);
 
   // Toggle audio.muted property and ensure proper audio initialization
   useEffect(() => {
@@ -143,9 +151,10 @@ const MainMenu: React.FC = () => {
 
   // Pause music on unmount
   useEffect(() => {
+    const audioElement = audioRef.current;
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
+      if (audioElement) {
+        audioElement.pause();
       }
     };
   }, []);
@@ -167,17 +176,8 @@ const MainMenu: React.FC = () => {
     }
   }, [selectedMode, router]);
 
-  const handleShowLeaderboard = useCallback(() => {
-    setShowLeaderboard(true);
-    refetchLeaderboard();
-  }, [refetchLeaderboard]);
-  
   const handleCloseLeaderboard = useCallback(() => {
     setShowLeaderboard(false);
-  }, []);
-
-  const handleShowSettings = useCallback(() => {
-    setShowSettings(true);
   }, []);
   
   const handleCloseSettings = useCallback(() => {

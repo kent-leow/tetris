@@ -16,7 +16,6 @@ interface RetroGameLayoutProps {
 
 const RetroGameLayout: React.FC<RetroGameLayoutProps> = ({ 
   children, 
-  title,
   showAnimatedBg = false 
 }) => {
   return (

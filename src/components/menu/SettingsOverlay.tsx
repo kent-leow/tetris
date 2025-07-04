@@ -186,7 +186,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose }) => {
                   boxShadow: assistantEnabled ? '0 0 10px rgba(34, 211, 238, 0.5)' : 'none',
                 }}
                 aria-label={`Drop assistant: ${assistantEnabled ? 'enabled' : 'disabled'}`}
-                aria-pressed={assistantEnabled}
+                aria-checked={assistantEnabled}
                 role="switch"
               >
                 <div

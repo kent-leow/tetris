@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAudioStore } from '../../lib/audio/store';
 import { useSettingsStore } from '../../lib/settings/store';
 import { GameOverOverlay } from './GameOverOverlay';
-import { gameReducer, initGameState, GameState, GameAction } from '@/lib/game/engine';
+import { gameReducer, initGameState } from '@/lib/game/engine';
 import { getDropPosition } from '@/lib/game/types';
 import { submitLeaderboardEntry } from '@/lib/highscore/submitLeaderboardEntry';
 import { useRouter } from 'next/navigation';
@@ -59,9 +59,10 @@ const SinglePlayerGame: React.FC = () => {
 
   // Pause music on unmount
   useEffect(() => {
+    const audioElement = audioRef.current;
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
+      if (audioElement) {
+        audioElement.pause();
       }
     };
   }, []);
@@ -87,15 +88,13 @@ const SinglePlayerGame: React.FC = () => {
     setShowOverlay(false);
     const interval = setInterval(() => {
       // Custom tick: detect if block lands
-      const prevY = state.position.y;
-      const nextPos = { x: state.position.x, y: state.position.y + 1 };
       // If moving down would collide, vibrate
       // (simulate what gameReducer does for 'tick')
       // We can't call checkCollision here, so vibrate after reducer if position doesn't change
       dispatch({ type: 'tick' });
     }, Math.max(1000 - (state.level - 1) * 75, 100));
     return () => clearInterval(interval);
-  }, [gameStarted, state.over, state.level, muted]);
+  }, [gameStarted, state.over, state.level, state.position.x, state.position.y, state.score, muted]);
 
   // Keyboard controls with long-press support - only when game has started
   React.useEffect(() => {
@@ -254,7 +253,7 @@ const SinglePlayerGame: React.FC = () => {
       playVanish();
     }
     prevStateRef.current = state;
-  }, [state.board, state.position.y, state.over, state.lines, playDrop, playVanish]);
+  }, [state, playDrop, playVanish]);
 
   // Board rendering with retro styling and drop assistant
   const renderBoard = () => {

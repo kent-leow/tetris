@@ -1,12 +1,12 @@
 // src/app/api/health/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { isDbConnected } from '../../../lib/db/mongo';
 
 /**
  * Health check endpoint for deployment monitoring
  * Returns system status and database connectivity
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
   const startTime = Date.now();
   
   try {
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
 /**
  * OPTIONS handler for CORS
  */
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
