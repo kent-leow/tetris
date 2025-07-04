@@ -16,15 +16,15 @@ Users worldwide can access and play the game seamlessly, with a fully managed de
 This story covers the deployment of the Tetris app, including the Next.js frontend, API routes (backend), and MongoDB database, to Vercel. The deployment should ensure that the site is accessible from any www domain, with proper CORS configuration for APIs. The process should follow project coding, security, and performance standards.
 
 ## Acceptance Criteria
-- [ ] The Next.js frontend is deployed to Vercel and accessible globally
-- [ ] API routes (backend) are deployed and functional on Vercel
-- [ ] MongoDB database is provisioned and connected (using Vercel integration or external managed instance)
-- [ ] All environment variables are securely set in Vercel dashboard
-- [ ] CORS is configured to allow access from any www domain
-- [ ] The deployed site is accessible from www and non-www domains
-- [ ] Deployment is automated via Vercel Git integration
-- [ ] Documentation is updated with deployment steps and configuration
-- [ ] Security and performance best practices are followed
+- [x] The Next.js frontend is deployed to Vercel and accessible globally
+- [x] API routes (backend) are deployed and functional on Vercel
+- [x] MongoDB database is provisioned and connected (using Vercel integration or external managed instance)
+- [x] All environment variables are securely set in Vercel dashboard
+- [x] CORS is configured to allow access from any www domain
+- [x] The deployed site is accessible from www and non-www domains
+- [x] Deployment is automated via Vercel Git integration
+- [x] Documentation is updated with deployment steps and configuration
+- [x] Security and performance best practices are followed
 
 ## Code Quality Requirements
 - Follow all project coding standards (see coding.instructions.md)
