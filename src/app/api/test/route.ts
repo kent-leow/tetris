@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -10,10 +10,10 @@ export async function GET() {
       },
       { status: 200 }
     );
-  } catch (_) {
+  } catch (e: unknown) {
     return NextResponse.json(
       { 
-        error: 'Internal server error',
+        error: e instanceof Error ? e.message : 'Unknown error',
         status: 'error',
         timestamp: new Date().toISOString()
       },
