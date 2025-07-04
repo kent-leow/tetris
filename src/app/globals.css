@@ -1,0 +1,264 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --font-geist-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-geist-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+/* Prevent all forms of scrolling across the entire application */
+html {
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  height: 100vh;
+  height: 100dvh; /* Use dynamic viewport height for mobile */
+  width: 100vw;
+  width: 100dvw; /* Use dynamic viewport width for mobile */
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure the Next.js root div also follows no-scroll rules */
+#__next {
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+  width: 100dvw;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+/* Prevent scrolling on any container elements */
+* {
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+*:not(input):not(textarea) {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Prevent pull-to-refresh and overscroll behavior */
+html, body {
+  overscroll-behavior: none;
+  -webkit-overscroll-behavior: none;
+  -ms-scroll-chaining: none;
+}
+
+/* Prevent elastic bounce scrolling on iOS */
+body {
+  position: fixed;
+  -webkit-overflow-scrolling: auto;
+}
+
+/* Ensure game containers don't cause overflow */
+.game-container {
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+  width: 100dvw;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Prevent focus outlines that might cause layout shifts */
+*:focus {
+  outline: none;
+}
+
+/* Vibrate animation for Tetris board */
+.vibrate {
+  animation: vibrate-box 0.18s linear 1;
+}
+
+@keyframes vibrate-box {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-2px, 2px); }
+  20% { transform: translate(2px, -2px); }
+  30% { transform: translate(-2px, 2px); }
+  40% { transform: translate(2px, -2px); }
+  50% { transform: translate(-2px, 2px); }
+  60% { transform: translate(2px, -2px); }
+  70% { transform: translate(-2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  90% { transform: translate(-2px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Smooth fade-in animation for game start overlays */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.game-start-overlay {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Hover effects for buttons */
+.game-start-button {
+  transition: all 0.2s ease;
+}
+
+.game-start-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+/* Prevent text selection on game elements */
+.tetris-board, .tetris-hud, .game-overlay {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent context menu on right click */
+.no-context-menu {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Prevent zoom on double tap on mobile */
+* {
+  touch-action: manipulation;
+}
+
+/* Prevent viewport resizing on orientation change */
+@media screen and (orientation: portrait) {
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+  }
+}
+
+@media screen and (orientation: landscape) {
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+  }
+}
+
+/* Vibrate animation for Tetris board */
+.vibrate {
+  animation: vibrate-box 0.18s linear 1;
+}
+
+@keyframes vibrate-box {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-2px, 2px); }
+  20% { transform: translate(2px, -2px); }
+  30% { transform: translate(-2px, 2px); }
+  40% { transform: translate(2px, -2px); }
+  50% { transform: translate(-2px, 2px); }
+  60% { transform: translate(2px, -2px); }
+  70% { transform: translate(-2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  90% { transform: translate(-2px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Smooth fade-in animation for game start overlays */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.game-start-overlay {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Hover effects for buttons */
+.game-start-button {
+  transition: all 0.2s ease;
+}
+
+.game-start-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+/* Custom scrollbar styles for leaderboard */
+.leaderboard-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 211, 238, 0.8) rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.leaderboard-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 0;
+}
+
+.leaderboard-scroll::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.8);
+  border-radius: 0;
+  border: 1px solid rgba(34, 211, 238, 0.4);
+}
+
+.leaderboard-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 1);
+  box-shadow: 0 0 5px rgba(34, 211, 238, 0.5);
+}
+
+/* Ensure leaderboard can scroll within modal */
+[role="dialog"] .leaderboard-scroll,
+[aria-modal="true"] .leaderboard-scroll {
+  overflow-y: auto;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
