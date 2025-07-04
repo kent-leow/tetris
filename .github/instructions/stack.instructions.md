@@ -123,6 +123,22 @@ applyTo: '**'
   - FID < 100ms
   - CLS < 0.1
 
+## Deployment Instructions
+
+### Deploying to Vercel
+- Vercel is the recommended platform for deploying this Next.js project.
+- Connect your GitHub repository to Vercel at [https://vercel.com/import](https://vercel.com/import).
+- Set the project root to the repository root.
+- Ensure the following build settings:
+  - **Framework Preset:** Next.js
+  - **Build Command:** `npm run build` (or `next build`)
+  - **Output Directory:** `.next`
+  - **Install Command:** `npm install`
+- Set environment variables in the Vercel dashboard as needed (e.g., for database, API keys).
+- For custom domains, configure them in the Vercel dashboard.
+- Enable automatic deployments from the `main` branch for production and `dev` for preview.
+- Review Vercel's [Next.js deployment documentation](https://vercel.com/docs/concepts/frameworks/next-js) for advanced configuration.
+
 ### Game Engine
 - Frame rate: 60 FPS
 - Input latency < 16ms
