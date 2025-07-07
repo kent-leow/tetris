@@ -8,12 +8,12 @@ import { isDbConnected } from '../../../lib/db/mongo';
  */
 export async function GET() {
   const startTime = Date.now();
+    const mongoUri = process.env.MONGODB_URI ?? 'NOT_DEFINED';
   
   try {
     // Check database connectivity
     const dbConnected = await isDbConnected();
     const responseTime = Date.now() - startTime;
-    const mongoUri = process.env.MONGODB_URI ?? 'NOT_DEFINED';
     
     const healthStatus = {
       status: dbConnected ? 'healthy' : 'degraded',
@@ -46,7 +46,8 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       error: 'Health check failed',
       responseTime: Date.now() - startTime,
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.NODE_ENV || 'development',
+      mongoUri: mongoUri,
     };
     
     return NextResponse.json(errorStatus, { status: 503 });
