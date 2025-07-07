@@ -3,7 +3,6 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useAudioStore } from '../../lib/audio/store';
 import { useRouter } from 'next/navigation';
-import GameModeMenu, { GameMode } from "./GameModeMenu";
 import LeaderboardOverlay from './LeaderboardOverlay';
 import SettingsOverlay from './SettingsOverlay';
 import { useLeaderboard } from '../../lib/highscore/useLeaderboard';
@@ -23,12 +22,11 @@ import { useMenuNavigation } from '../../lib/accessibility/useFocusManager';
 
 /**
  * MainMenu component displays the main menu for the Tetris game.
- * Integrates GameModeMenu for mode selection.
+ * Provides direct access to single and two player modes.
  */
 
 
 const MainMenu: React.FC = () => {
-  const [selectedMode, setSelectedMode] = useState<GameMode | undefined>(undefined);
   const { entries, loading: leaderboardLoading, refetch: refetchLeaderboard } = useLeaderboard();
   const { menuScore, loading: menuScoreLoading } = useMainMenuScore();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -45,7 +43,7 @@ const MainMenu: React.FC = () => {
 
   // Menu navigation with arrow keys
   const { handleKeyDown: handleMenuKeyDown } = useMenuNavigation({
-    itemSelector: '[role="menuitem"], [data-menu-item]',
+    itemSelector: '[role="menuitem"], .game-mode-button',
     container: menuContainerRef.current,
     orientation: 'vertical',
     wrap: true,
@@ -76,11 +74,11 @@ const MainMenu: React.FC = () => {
       switch (event.key) {
         case '1':
           event.preventDefault();
-          setSelectedMode('single');
+          router.push('/single');
           break;
         case '2':
           event.preventDefault();
-          setSelectedMode('two');
+          router.push('/double');
           break;
         case 'Enter':
         case ' ':
@@ -112,7 +110,7 @@ const MainMenu: React.FC = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showLeaderboard, showSettings, handleMenuKeyDown, handleShowLeaderboard, handleShowSettings]);
+  }, [showLeaderboard, showSettings, handleMenuKeyDown, handleShowLeaderboard, handleShowSettings, router]);
 
   // Toggle audio.muted property and ensure proper audio initialization
   useEffect(() => {
@@ -165,18 +163,13 @@ const MainMenu: React.FC = () => {
     toggleMuted();
   }, [toggleMuted]);
 
-  const handleSelectMode = useCallback((mode: GameMode) => {
-    setSelectedMode(mode);
-  }, []);
+  const handleStartSinglePlayer = useCallback(() => {
+    router.push('/single');
+  }, [router]);
 
-  const handleStartGame = useCallback(() => {
-    if (!selectedMode) return;
-    if (selectedMode === 'single') {
-      router.push('/single');
-    } else if (selectedMode === 'two') {
-      router.push('/double');
-    }
-  }, [selectedMode, router]);
+  const handleStartTwoPlayer = useCallback(() => {
+    router.push('/double');
+  }, [router]);
 
   const handleCloseLeaderboard = useCallback(() => {
     setShowLeaderboard(false);
@@ -295,34 +288,69 @@ const MainMenu: React.FC = () => {
           </div>
         </div>
 
-        {/* Game mode selection */}
-        <div className="mb-6 w-full max-w-md flex-shrink-0" data-menu-item>
-          <GameModeMenu onSelectMode={handleSelectMode} selectedMode={selectedMode} />
+        {/* Game Mode Selection - Special Prominent Buttons */}
+        <div ref={menuContainerRef} className="w-full max-w-lg mb-6 flex-shrink-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Single Player - Neon Cyan Theme */}
+            <button
+              onClick={handleStartSinglePlayer}
+              role="menuitem"
+              tabIndex={0}
+              autoFocus
+              aria-describedby="single-player-description"
+              className="game-mode-button group relative overflow-hidden bg-gradient-to-br from-cyan-900 via-cyan-800 to-cyan-900 border-3 border-cyan-400 text-cyan-100 px-6 py-8 sm:px-8 sm:py-6 text-lg sm:text-xl font-bold font-mono uppercase tracking-wider transition-all duration-300 hover:border-cyan-300 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-cyan-300/50 transform hover:scale-105 active:scale-95 game-mode-button-cyan"
+              style={{
+                boxShadow: '0 0 20px rgba(34, 211, 238, 0.6), inset 0 0 20px rgba(34, 211, 238, 0.1)',
+                textShadow: '0 0 10px currentColor',
+                animation: 'pulse 2s infinite',
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              <div className="relative z-10 flex flex-col items-center">
+                <span className="text-3xl sm:text-2xl mb-2 sm:mb-1">🎮</span>
+                <span className="text-center">Single Player</span>
+                <span className="text-xs opacity-80 mt-2 sm:mt-1">Press 1</span>
+              </div>
+            </button>
+
+            {/* Two Player - Neon Purple Theme */}
+            <button
+              onClick={handleStartTwoPlayer}
+              role="menuitem"
+              tabIndex={0}
+              aria-describedby="two-player-description"
+              className="game-mode-button group relative overflow-hidden bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 border-3 border-purple-400 text-purple-100 px-6 py-8 sm:px-8 sm:py-6 text-lg sm:text-xl font-bold font-mono uppercase tracking-wider transition-all duration-300 hover:border-purple-300 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-purple-300/50 transform hover:scale-105 active:scale-95 game-mode-button-purple"
+              style={{
+                boxShadow: '0 0 20px rgba(168, 85, 247, 0.6), inset 0 0 20px rgba(168, 85, 247, 0.1)',
+                textShadow: '0 0 10px currentColor',
+                animation: 'pulse 2s infinite',
+                animationDelay: '1s',
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-400/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              <div className="relative z-10 flex flex-col items-center">
+                <span className="text-3xl sm:text-2xl mb-2 sm:mb-1">👥</span>
+                <span className="text-center">Two Player</span>
+                <span className="text-xs opacity-80 mt-2 sm:mt-1">Press 2</span>
+              </div>
+            </button>
+          </div>
         </div>
 
-        {/* Menu buttons */}
-        <div ref={menuContainerRef} className="w-full max-w-md space-y-3 flex-shrink-0" role="menu" aria-label="Main navigation menu">
-          <RetroButton
-            onClick={handleStartGame}
-            disabled={!selectedMode}
-            variant="primary"
-            size="lg"
-            className="w-full"
-            role="menuitem"
-            tabIndex={0}
-            autoFocus
-            aria-disabled={!selectedMode}
-            aria-describedby="start-game-description"
-          >
-            {selectedMode ? `Start ${selectedMode === 'single' ? 'Single Player' : 'Two Player'} Game` : 'Start Game'}
-          </RetroButton>
-          <div id="start-game-description" className="sr-only">
-            {selectedMode ? `Press Enter to start ${selectedMode} player game` : 'Select a game mode first'}
-          </div>
+        {/* Accessibility descriptions */}
+        <div id="single-player-description" className="sr-only">
+          Start a single player Tetris game with keyboard shortcut 1
+        </div>
+        <div id="two-player-description" className="sr-only">
+          Start a two player Tetris game with keyboard shortcut 2
+        </div>
+
+        {/* Secondary Menu buttons */}
+        <div className="w-full max-w-md space-y-3 flex-shrink-0" role="menu" aria-label="Secondary navigation menu">
 
           <RetroButton
             onClick={handleShowLeaderboard}
-            variant="secondary"
+            variant="accent"
             size="lg"
             className="w-full"
             role="menuitem"
@@ -339,7 +367,7 @@ const MainMenu: React.FC = () => {
 
           <RetroButton
             onClick={handleShowSettings}
-            variant="accent"
+            variant="warning"
             size="lg"
             className="w-full"
             role="menuitem"
@@ -358,7 +386,7 @@ const MainMenu: React.FC = () => {
         {/* Enhanced keyboard navigation hints */}
         <div className="mt-8 text-center flex-shrink-0 space-y-1">
           <RetroText size="sm" variant="primary" glow={false} className="opacity-60">
-            ↑↓ Navigate • Enter/Space Activate • 1/2 Select Mode
+            ↑↓ Navigate • Enter/Space Activate • 1 Single Player • 2 Two Player
           </RetroText>
           <RetroText size="sm" variant="secondary" glow={false} className="opacity-40">
             L: Leaderboard • S: Settings • Esc: Clear Focus

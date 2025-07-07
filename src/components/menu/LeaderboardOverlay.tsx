@@ -84,7 +84,7 @@ const LeaderboardOverlay: React.FC<LeaderboardOverlayProps> = ({
           <div className="mb-4">
             <RetroButton
               onClick={onRefresh}
-              variant="secondary"
+              variant="accent"
               size="sm"
               className="w-full"
               aria-label="Refresh leaderboard"

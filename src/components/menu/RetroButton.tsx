@@ -11,7 +11,7 @@ interface RetroButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'accent';
+  variant?: 'primary' | 'secondary' | 'accent' | 'warning';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   autoFocus?: boolean;
@@ -41,6 +41,12 @@ const variantClasses = {
     base: 'bg-green-900 border-green-400 text-green-400',
     hover: 'hover:bg-green-800 hover:text-green-300 hover:border-green-300',
     focus: 'focus:bg-green-700 focus:border-green-200',
+    disabled: 'disabled:bg-gray-800 disabled:border-gray-600 disabled:text-gray-600',
+  },
+  warning: {
+    base: 'bg-orange-900 border-orange-400 text-orange-400',
+    hover: 'hover:bg-orange-800 hover:text-orange-300 hover:border-orange-300',
+    focus: 'focus:bg-orange-700 focus:border-orange-200',
     disabled: 'disabled:bg-gray-800 disabled:border-gray-600 disabled:text-gray-600',
   },
 };
