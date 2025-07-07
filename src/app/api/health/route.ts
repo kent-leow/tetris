@@ -13,6 +13,7 @@ export async function GET() {
     // Check database connectivity
     const dbConnected = await isDbConnected();
     const responseTime = Date.now() - startTime;
+    const mongoUri = process.env.MONGODB_URI ?? 'NOT_DEFINED';
     
     const healthStatus = {
       status: dbConnected ? 'healthy' : 'degraded',
@@ -29,7 +30,8 @@ export async function GET() {
       },
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
-      uptime: process.uptime()
+      uptime: process.uptime(),
+      mongoUri: mongoUri,
     };
     
     const statusCode = dbConnected ? 200 : 503;
