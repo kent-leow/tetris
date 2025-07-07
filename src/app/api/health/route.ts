@@ -15,6 +15,7 @@ export async function GET() {
     const dbConnected = await isDbConnected();
     const responseTime = Date.now() - startTime;
     
+    console.log('mongoUri:', mongoUri);
     const healthStatus = {
       status: dbConnected ? 'healthy' : 'degraded',
       timestamp: new Date().toISOString(),
@@ -40,6 +41,7 @@ export async function GET() {
     
   } catch (error) {
     console.error('Health check failed:', error);
+    console.error('mongoUri:', mongoUri);
     
     const errorStatus = {
       status: 'unhealthy',
