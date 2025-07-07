@@ -30,11 +30,19 @@ export function useLeaderboard(): {
     try {
       const res = await fetch('/api/leaderboard');
       if (!res.ok) throw new Error('Failed to fetch leaderboard');
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setEntries(data);
+      const response = await res.json();
+      
+      // Handle the API response format { success: true, data: array }
+      if (response.success && Array.isArray(response.data)) {
+        setEntries(response.data);
+      } else if (Array.isArray(response)) {
+        // Fallback for direct array response
+        setEntries(response);
+      } else {
+        setEntries([]);
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to fetch leaderboard:', error);
       setEntries([]);
     } finally {
       setLoading(false);

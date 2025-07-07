@@ -7,6 +7,7 @@ import GameModeMenu, { GameMode } from "./GameModeMenu";
 import LeaderboardOverlay from './LeaderboardOverlay';
 import SettingsOverlay from './SettingsOverlay';
 import { useLeaderboard } from '../../lib/highscore/useLeaderboard';
+import { useMainMenuScore } from '../../lib/highscore/useMainMenuScore';
 import AnimatedBackground from './AnimatedBackground';
 import RetroText from './RetroText';
 import RetroButton from './RetroButton';
@@ -29,6 +30,7 @@ import { useMenuNavigation } from '../../lib/accessibility/useFocusManager';
 const MainMenu: React.FC = () => {
   const [selectedMode, setSelectedMode] = useState<GameMode | undefined>(undefined);
   const { entries, loading: leaderboardLoading, refetch: refetchLeaderboard } = useLeaderboard();
+  const { menuScore, loading: menuScoreLoading } = useMainMenuScore();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const muted = useAudioStore((s) => s.muted);
@@ -245,28 +247,52 @@ const MainMenu: React.FC = () => {
 
         {/* Highscore Display with retro styling */}
         <div
-          className="mb-6 w-full max-w-md flex items-center justify-center bg-gray-900 bg-opacity-50 border-2 border-yellow-400 p-4 backdrop-blur-sm flex-shrink-0"
+          className="mb-6 w-full max-w-md bg-gray-900 bg-opacity-50 border-2 border-yellow-400 p-4 backdrop-blur-sm flex-shrink-0"
           aria-live="polite"
           aria-atomic="true"
           style={{
             boxShadow: '0 0 15px rgba(251, 191, 36, 0.3)',
           }}
         >
-          <RetroText size="lg" variant="accent" className="mr-3">
-            Highscore:
-          </RetroText>
-          <RetroText
-            size="xl"
-            variant="accent"
-            glow
-            aria-labelledby="highscore-label"
-          >
-            {leaderboardLoading
-              ? '...'
-              : entries.length > 0
-                ? entries[0].score.toLocaleString()
-                : '0'}
-          </RetroText>
+          <div className="text-center">
+            <RetroText size="md" variant="accent" className="mb-2">
+              High Score
+            </RetroText>
+            
+            {menuScoreLoading ? (
+              <RetroText size="lg" variant="accent" glow>
+                Loading...
+              </RetroText>
+            ) : menuScore ? (
+              <>
+                <RetroText
+                  size="2xl"
+                  variant="accent"
+                  glow
+                  className="font-mono mb-1"
+                  aria-labelledby="highscore-label"
+                >
+                  {menuScore.score.toLocaleString()}
+                </RetroText>
+                <RetroText 
+                  size="sm" 
+                  variant="secondary" 
+                  className="opacity-80"
+                >
+                  by {menuScore.name}
+                </RetroText>
+              </>
+            ) : (
+              <>
+                <RetroText size="lg" variant="accent" glow className="font-mono mb-1">
+                  No Score Yet
+                </RetroText>
+                <RetroText size="sm" variant="secondary" className="opacity-80">
+                  Be the first to play!
+                </RetroText>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Game mode selection */}
